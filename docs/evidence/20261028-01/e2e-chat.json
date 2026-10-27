@@ -1,0 +1,34 @@
+{
+  "session": "ses_e818a9ef2ffefBjEuqcmWEm5yb",
+  "note": "e2e 对话证据（文本截断、已脱敏）",
+  "messages": [
+    {
+      "type": "assistant",
+      "model": {
+        "id": "deepseek-flash",
+        "providerID": "deepseek",
+        "variant": "default"
+      },
+      "finish": "stop",
+      "content": [
+        {
+          "type": "text",
+          "text": "我是 DeepSeek Flash，在 OpenCode 编码代理环境中运行，能读写文件、执行命令、搜索网络并调用工具，帮你完成开发任务。有需要直接告诉我就好。"
+        }
+      ],
+      "tokens": {
+        "input": 5144,
+        "output": 41,
+        "reasoning": 0,
+        "cache": {
+          "read": 128,
+          "write": 0
+        }
+      }
+    },
+    {
+      "type": "user",
+      "text": ""
+    }
+  ]
+}

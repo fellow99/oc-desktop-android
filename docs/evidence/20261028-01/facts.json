@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "startedAt": 1793120985674,
+  "node": "v24.22.1",
+  "jit": {
+    "wasm": "ok",
+    "hotLoopMs": 128.6929,
+    "verdict": "suspect"
+  },
+  "sqlite": {
+    "wal": {
+      "journal_mode": "wal"
+    },
+    "readBack": {
+      "v": "hello-android"
+    },
+    "concurrent": {
+      "n": 1
+    },
+    "ok": true
+  },
+  "sh": {
+    "path": "/system/bin/sh",
+    "spawnEvent": true,
+    "exitCode": 7,
+    "signal": null,
+    "stdoutSentry": true,
+    "stderrSentry": true,
+    "ok": true
+  },
+  "host": {
+    "ok": true
+  },
+  "webcap": {
+    "localStorage": "ok",
+    "indexedDB": "ok",
+    "fetch": "ok",
+    "eventSource": "ok",
+    "cryptoSubtle": "ok",
+    "webAssembly": "ok",
+    "blobWorker": "ok",
+    "inlineScript": "ok"
+  },
+  "port": 45865
+}
