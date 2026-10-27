@@ -33,3 +33,10 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# 签名材料（不入库；模板见 keystore.properties.sample）
+keystore.properties
+
+# 载荷产物（scripts/collect-opencode.mjs 生成，不进 git）
+app/src/main/assets/opencode-dist.tar.gz
+app/src/main/assets/opencode-dist.manifest.json

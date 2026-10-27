@@ -1,0 +1,18 @@
+[versions]
+agp = "8.9.2"
+kotlin = "2.1.20"
+compileSdk = "36"
+minSdk = "24"
+targetSdk = "36"
+nodeBridge = "0.2.0"
+nodeRuntime = "24.22.1"
+coroutines = "1.9.0"
+
+[libraries]
+node-bridge = { module = "io.github.fellow99:node-bridge", version.ref = "nodeBridge" }
+node-runtime = { module = "io.github.fellow99:node-runtime", version.ref = "nodeRuntime" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

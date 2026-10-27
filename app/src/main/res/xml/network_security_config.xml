@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  loopback 明文放行（D4 / P0-D）：Android 9+ 默认禁明文，
+  WebView / HttpURLConnection 访问 http://127.0.0.1:<port> 必须显式放行。
+  只放行 loopback 两个域名，其余流量维持禁明文。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
