@@ -17,10 +17,11 @@
 | Node 运行时 | `io.github.fellow99:node-bridge:0.2.0` + `io.github.fellow99:node-runtime`（Maven 双包）→ Node 24.x（引擎版本以 aosp-node-runtime 仓 `runtime.lock.json` 为准，当前 24.22.1 / arm64-v8a） |
 | 渲染 | **系统 WebView**（应用进程内；`networkSecurityConfig` 放行 loopback 明文） |
 | 数据 | `node:sqlite`（WAL）→ `<filesDir>/data/opencode/opencode.db` |
-| 规划 | [`docs/000-工程规划.md`](docs/000-工程规划.md)（**唯一权威规划**，v0.2） |
+| 规划 | [`docs/000-工程规划.md`](docs/000-工程规划.md)（**唯一权威规划**，v0.3） |
+| 能力清单 | [`docs/安卓环境能力清单-2.1.2.md`](docs/安卓环境能力清单-2.1.2.md)（对标 ark/hos 落地面 + 待实现项） |
 | 特色能力 | Git（isomorphic-git 插件）+ **pnpm（进程内 pnpm，本版新增）** |
 
-## 快速开始（Phase 0 落地后可用 ⬜）
+## 快速开始（✅ Phase 0 已落地；载荷产物需先构建）
 
 ```bash
 # ① 上游产物（host 侧；补丁 → bun → bundle-only → 裁剪 → 插件物化 → tar.gz）
