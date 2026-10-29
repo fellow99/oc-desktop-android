@@ -63,6 +63,12 @@ jobs:
           java-version: 17
           cache: gradle
 
+      - name: 引擎 AAR 预取（Central → OC_NODE_RUNTIME_AAR，verify-runtime 门禁输入）
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/node-runtime-24.22.1.aar" \
+            https://repo1.maven.org/maven2/io/github/fellow99/node-runtime/24.22.1/node-runtime-24.22.1.aar
+          echo "OC_NODE_RUNTIME_AAR=$RUNNER_TEMP/node-runtime-24.22.1.aar" >> "$GITHUB_ENV"
+
       # ── 载荷五步（scripts/* 零改动；任一步红即整流程失败）────────────────────
       - name: 载荷① apply-patches（基线守卫 + 幂等补丁）
         run: node scripts/apply-patches.mjs --repo "$UPSTREAM"
@@ -88,6 +94,12 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
+            for v in KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+              if [ -z "${!v}" ]; then
+                echo "::error::签名 secrets 部分配置：$v 为空 —— 请在仓库 Settings → Secrets 配齐 KEYSTORE_BASE64 / KEYSTORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD 四项（或全部删除走 debug 兜底）"
+                exit 1
+              fi
+            done
             echo "$KEYSTORE_BASE64" | base64 --decode > oc-desktop-android.keystore
             printf 'storeFile=oc-desktop-android.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
               "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
@@ -105,7 +117,7 @@ jobs:
       - name: 收集产物（重命名 + SHA-256 清单）
         run: |
           NAME="${GITHUB_REF_NAME:-manual}"
-          APK="app/build/outputs/apk/${VARIANT,,}/app-${VARIANT}.apk"
+          APK="app/build/outputs/apk/${VARIANT,,}/app-${VARIANT,,}.apk"
           test -f "$APK"
           mkdir -p dist
           cp "$APK" "dist/oc-desktop-android-${NAME}.apk"
