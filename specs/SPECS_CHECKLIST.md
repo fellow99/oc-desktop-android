@@ -31,9 +31,9 @@
 | M-104 | 宿主能力桥 | [spec](./104-host-capabilities/spec.md) | ✅ Done（as-built，SAF/notify 为 stub） | HostCapabilities + 探针 echo |
 | M-105 | 鉴权（密码/auth_token/凭据） | [spec](./105-auth/spec.md) | ✅ Done（as-built） | ConnectionStore + e2e 对话 |
 | M-106 | 上游适配（五补丁） | [spec](./106-upstream-adaptation/spec.md) | ✅ Done（as-built 20261029） | 7 补丁幂等应用 + smoke 全绿 |
-| M-107 | 合规（§13 清单） | [spec](./107-compliance/spec.md) | 🔶 In Progress | G3/G4/G6 ✅（20261029）；G5/G8/G10 待发版轮 |
+| M-107 | 合规（§13 清单） | [spec](./107-compliance/spec.md) | 🔶 大部分✅（20261029-2） | G3/G4/G5/G6/G10 ✅；G8 安装文档/Play 专项待 |
 | M-108 | Git 插件（isomorphic-git） | [spec](./108-git-plugin/spec.md) | 🔶 Done（host 20261029） | verify-git-plugin 全过；0600/真机随 P0-N 轮 |
-| M-109 | 回归基线（四件套） | [spec](./109-regression/spec.md) | ⬜ Pending | 规划 Phase 4 |
+| M-109 | 回归基线（四件套） | [spec](./109-regression/spec.md) + [as-built](./109-regression/as-built.md) | 🔶 Done（host 20261029-2） | scripts/regression.mjs；首启/设备重测待 |
 | M-110 | jitless 诊断形态 | [spec](./110-jitless/spec.md) | ⬜ Pending | ark 同名；Android 裁剪说明 |
 | M-111 | 基线迁移 v2.1.2 | [spec](./111-version-2.1.2/spec.md) | ⬜ Pending | 对标 ark 111 |
 | M-112 | JS 搜索兜底（grep/glob） | [spec](./112-js-search/spec.md) | 🔶 Done（host 20261029） | oc-plugin-search；夹具用例全过 |
