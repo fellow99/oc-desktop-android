@@ -158,6 +158,7 @@ class OpencodeRuntime(private val context: Context) {
         copyAssetFile(context, "payload/unpack.js", File(context.filesDir, "payload/unpack.js"))
         copyAssetFile(context, "payload/lib/env.js", File(context.filesDir, "payload/lib/env.js"))
         copyAssetFile(context, "payload/lib/ready.js", File(context.filesDir, "payload/lib/ready.js"))
+        copyAssetFile(context, "payload/lib/plugins.js", File(context.filesDir, "payload/lib/plugins.js"))
 
         // ② 载荷 tar.gz（MB 级；marker 版本一致时不拷贝，二次启动零拷贝；版本变化 → 重拷 + Node 重解包）
         val dist = File(context.filesDir, "opencode-dist")
