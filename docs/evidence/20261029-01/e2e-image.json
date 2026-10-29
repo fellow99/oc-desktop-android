@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "device": "emulator-5554（API 37，arm64 转译）",
+  "session": "ses_e7aa77edaffejDEJaPM3eiknkf",
+  "note": "看图分析证据（已脱敏；附件为设备截图 screen1.png，经 data URL 传入）",
+  "input": {
+    "text": "这张截图显示的是什么应用？界面标题是什么？请简要描述你看到的界面内容。",
+    "files": [{ "name": "screen1.png", "mime": "image/png", "uri": "data:image/png;base64,***（51,537 B，略）***" }]
+  },
+  "assistant": {
+    "model": { "providerID": "deepseek", "id": "deepseek-flash" },
+    "finish": "stop",
+    "text": "**应用**：从界面特征看，这是 **OpenCode** 的客户端（与你当前所在的 Android 版环境一致），不是普通聊天软件。\n\n**界面标题**：顶部标题栏显示 **\"Session\"**，左侧有一个圆角方块 \"E\" 标识，右侧有数字 **1**（可能是会话/消息计数）。（原文截断）"
+  },
+  "screenshot": "screen1.png"
+}

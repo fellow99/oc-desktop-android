@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "device": "emulator-5554（API 37，arm64 转译）",
+  "build": "app-debug.apk（P1 载荷：7 补丁 bundle + 3 插件）",
+  "session": "ses_e7aa77edaffejDEJaPM3eiknkf",
+  "note": "端到端对话证据（已脱敏：API key 与连接口令零落盘，凭据仅存于设备沙箱 credential store）",
+  "workspace": {
+    "created": "e2e-p1（经 POST /api/rpc/oc-harmony-workspace-roots/mkdir）",
+    "switched": "setCurrent → 重启后 server.log cwd=…/workspace/e2e-p1（203 R4 ✅）"
+  },
+  "messages": [
+    { "role": "user", "text": "介绍一下你自己" },
+    {
+      "role": "assistant",
+      "model": { "providerID": "deepseek", "id": "deepseek-flash" },
+      "finish": "stop",
+      "text": "你好！我是运行在 OpenCode 中的 AI 编码助手。\n\n**关于我**\n- 模型：DeepSeek V4.1 Flash 1017（provider: deepseek）\n- 角色：可以读代码、改代码、跑命令、做 Git 操作的编程代理\n\n**我能做什么**\n- 浏览和理解代码库（搜索、读文件…）（原文截断）"
+    }
+  ]
+}
