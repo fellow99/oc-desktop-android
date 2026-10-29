@@ -91,6 +91,10 @@ try {
   const html = await index.text()
   if (index.status !== 200 || !/<html|<!doctype/i.test(html)) throw new Error(`/ → ${index.status}（非 UI html）`)
   console.log(`[smoke] / → ${index.status}（${html.length} bytes）`)
+  // ④b 品牌断言（P1-4 / 0010）：document.title 判据的归档形态——首页 <title> 必须是 OC Desktop
+  const title = /<title>([^<]*)<\/title>/i.exec(html)?.[1] ?? ''
+  if (!/^OC Desktop/.test(title)) throw new Error(`品牌断言失败：<title>=「${title}」≠ OC Desktop*（0010 未生效？）`)
+  console.log(`[smoke] title → ${title}`)
 
   // ⑤ SSE 首事件（v2.1.2 路由：/api/event，协议 packages/protocol/src/groups/event.ts:44）
   const sse = await fetch(`${base}/api/event`, { headers: { Authorization: BASIC } })

@@ -69,6 +69,23 @@ if (CHECK) {
   process.exit(0)
 }
 
+// ── 运行时锁值门禁（P1-5；--skip-runtime-check 仅诊断）────────────────────────
+if (!process.argv.includes('--skip-runtime-check')) {
+  const { spawnSync } = await import('node:child_process')
+  const verify = spawnSync(process.execPath, [path.join(root, 'scripts', 'verify-runtime.mjs')], { stdio: 'inherit' })
+  if (verify.status !== 0) {
+    console.error(`✗ verify-runtime 门禁未过（exit=${verify.status}）；不把不确定引擎打进载荷。`)
+    process.exit(2)
+  }
+}
+
+// ── 插件暂存（P2-9/P1 前置；collect-plugins.mjs 产出 build/plugins）──────────
+const pluginsStage = path.join(root, 'build', 'plugins')
+if (!existsSync(path.join(pluginsStage, 'oc-plugin-git', 'index.js'))) {
+  console.error(`✗ 缺插件暂存：${pluginsStage}（先跑 node scripts/collect-plugins.mjs）`)
+  process.exit(2)
+}
+
 // ── ustar 打包 ───────────────────────────────────────────────────────────────
 /** @param {string[]} rel 相对路径（/ 分隔） */
 function listFiles(base) {
@@ -95,11 +112,25 @@ function octal(value, len) {
   return s.padStart(len - 1, '0') + '\0'
 }
 
-/** 512B ustar 头 */
+/** 512B ustar 头（路径 >100B 时按 ustar prefix 拆分：prefix ≤155 + name ≤100） */
 function tarHeader(name, size, typeFlag, mtimeSec) {
   const head = Buffer.alloc(512, 0)
-  const nameBuf = Buffer.from(name, 'utf8')
-  if (nameBuf.length > 100) throw new Error(`路径过长（>100，未用 prefix 拆分）：${name}`)
+  let nameBuf = Buffer.from(name, 'utf8')
+  let prefixBuf = null
+  if (nameBuf.length > 100) {
+    // 在 name 内找最靠后的 '/' 使前缀 ≤155B、余下 ≤100B（按字节切，容忍 UTF-8 多字节段边界）
+    let cut = -1
+    for (let i = name.length - 1; i > 0; i--) {
+      if (name[i] !== '/') continue
+      const p = Buffer.from(name.slice(0, i), 'utf8')
+      const n = Buffer.from(name.slice(i + 1), 'utf8')
+      if (p.length <= 155 && n.length > 0 && n.length <= 100) { cut = i; break }
+    }
+    if (cut < 0) throw new Error(`路径无法按 ustar prefix 拆分（>100B 且无可切分点）：${name}`)
+    prefixBuf = Buffer.from(name.slice(0, cut), 'utf8')
+    nameBuf = Buffer.from(name.slice(cut + 1), 'utf8')
+    prefixBuf.copy(head, 345)
+  }
   nameBuf.copy(head, 0)
   head.write('0000644\0', 100, 'utf8') // mode
   head.write('0000000\0', 108, 'utf8') // uid
@@ -118,6 +149,19 @@ function tarHeader(name, size, typeFlag, mtimeSec) {
 }
 
 const entries = listFiles(dist)
+// 插件以 `plugins/<name>/...` 追加进同一载荷（运行期由 payload/lib/plugins.js 物化到 config/opencode/plugin/）
+const pluginNames = readdirSync(pluginsStage).filter((n) => statSync(path.join(pluginsStage, n)).isDirectory())
+const pluginManifests = []
+for (const name of pluginNames) {
+  const marker = path.join(pluginsStage, name, 'materialize.json')
+  if (existsSync(marker)) {
+    const m = JSON.parse(readFileSync(marker, 'utf8'))
+    pluginManifests.push({ name, files: m.files, bytes: m.bytes, digest: m.digest })
+  }
+}
+for (const e of listFiles(pluginsStage)) {
+  entries.push({ rel: `plugins/${e.rel}`, abs: e.abs, dir: e.dir, size: e.size })
+}
 const mtime = Math.floor(Date.now() / 1000)
 const chunks = []
 let logicalBytes = 0
@@ -126,8 +170,8 @@ for (const e of entries) {
   if (e.dir) {
     chunks.push(tarHeader(e.rel, 0, '5', mtime))
   } else {
-    chunks.push(tarHeader(e.rel, e.size, '0', mtime))
     const data = readFileSync(e.abs)
+    chunks.push(tarHeader(e.rel, data.length, '0', mtime))
     chunks.push(data)
     const pad = (512 - (data.length % 512)) % 512
     if (pad) chunks.push(Buffer.alloc(pad, 0))
@@ -157,6 +201,7 @@ const manifest = {
   bytes: logicalBytes,
   tarBytes: tarBuf.length,
   gzBytes: gz.length,
+  plugins: pluginManifests,
   builtAt: new Date().toISOString(),
 }
 writeFileSync(path.join(outDir, 'opencode-dist.manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
