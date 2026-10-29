@@ -1,6 +1,6 @@
 # 001-building-workflow —— GitHub Actions 构建发布流程（spec）
 
-> 状态：🚧 planned → as-built（本文档随实现滚动更新）· 日期：2026-10-29 · 引用：规划 §5.2/§7.1/§14.3、102-payload-pipeline（载荷流水线契约）、宪法 C3/C4
+> 状态：✅ as-built（2026-10-29；CI 端到端 T-C9 待真推 tag，先 workflow_dispatch 彩排）· 引用：规划 §5.2/§7.1/§14.3、102-payload-pipeline（载荷流水线契约）、宪法 C3/C4
 > 需求模块落位：`oc-desktop-android/specs/`（按需求约定，不入父工程 specs）
 
 ## 1. 目标
@@ -13,14 +13,14 @@
 
 | # | 需求 | 判据（可观测） | 实测 |
 |---|---|---|---|
-| R1 | tag 触发 | 推送 `v*` tag（如 `v0.12.1`）触发 workflow；`workflow_dispatch` 可手动触发（仅构建验证，不发布） | ⬜ |
-| R2 | 云端载荷构建 | CI 上依次执行 `apply-patches → build-opencode(OPENCODE_NODE_TARGET=node24) → collect-plugins → collect-opencode → smoke-node24`，与 README 快速开始/规划 §14.3 完全同口径；任一门禁红则整个流程失败 | ⬜ |
-| R3 | 上游基线守卫 | CI 检出 `anomalyco/opencode` 锁定基线 `a517687fde`（Branch_v2.1.2）；`apply-patches`/`collect-opencode` 的基线断言在 CI 上生效（HEAD 不符即失败） | ⬜ |
-| R4 | APK 产物 | 载荷门禁全绿后 `gradle :app:assemble{Release,Debug}` 产出 APK：配置了签名 secrets → `release` 签名包；未配置 → `debug` 签名包（可直接安装） | ⬜ |
-| R5 | 自动发布 | tag 触发的构建成功后自动创建 GitHub Release（release 名含 tag），附件含 APK 与 `.sha256` 校验清单 | ⬜ |
-| R6 | 安全纪律 | 签名材料零入库：keystore 经 secrets（base64）注入，`keystore.properties`/`*.keystore` 保持 gitignore；workflow 具最小权限（`contents: write`）；无敏感明文 | ⬜ |
-| R7 | 引擎依赖 | CI 直接从 Maven Central 解析 `io.github.fellow99:node-bridge:0.2.0` + `node-runtime:24.22.1`（不依赖 mavenLocal） | ✅ Central 已核录（2026-10-27 发布，本机 curl maven-metadata 实证） |
-| R8 | 失败可观测 | 载荷五步、APK 构建、发布各自独立 step，失败可直接定位到步；产物同时以 artifact 形式上传留存 | ⬜ |
+| R1 | tag 触发 | 推送 `v*` tag（如 `v0.12.1`）触发 workflow；`workflow_dispatch` 可手动触发（仅构建验证，不发布） | ✅ 断言 T-C3（端到端 T-C9 待真推 tag） |
+| R2 | 云端载荷构建 | CI 上依次执行 `apply-patches → build-opencode(OPENCODE_NODE_TARGET=node24) → collect-plugins → collect-opencode → smoke-node24`，与 README 快速开始/规划 §14.3 完全同口径；任一门禁红则整个流程失败 | ✅ 断言 T-C4；verify-runtime 门禁输入经 AAR 预取步满足（T-C11 Central AAR 实测全绿） |
+| R3 | 上游基线守卫 | CI 检出 `anomalyco/opencode` 锁定基线 `a517687fde`（Branch_v2.1.2）；`apply-patches`/`collect-opencode` 的基线断言在 CI 上生效（HEAD 不符即失败） | ✅ 断言 J3/J4 + T-C8 等价；fetch-depth:0 保 abbrev 长度（见 plan D1 注） |
+| R4 | APK 产物 | 载荷门禁全绿后 `gradle :app:assemble{Release,Debug}` 产出 APK：配置了签名 secrets → `release` 签名包；未配置 → `debug` 签名包（可直接安装） | ✅ 断言 T-C5/T-C12 + T-C7 本机 assembleDebug 绿 + gradlew mode 100755（T-C13） |
+| R5 | 自动发布 | tag 触发的构建成功后自动创建 GitHub Release（release 名含 tag），附件含 APK 与 `.sha256` 校验清单 | ✅ 断言 T-C10c/d（端到端 T-C9 待真推 tag） |
+| R6 | 安全纪律 | 签名材料零入库：keystore 经 secrets（base64）注入，`keystore.properties`/`*.keystore` 保持 gitignore；workflow 具最小权限（`contents: write`）；无敏感明文 | ✅ T-C6 check-ignore 实证 + 断言 T-C5a-e |
+| R7 | 引擎依赖 | CI 直接从 Maven Central 解析 `io.github.fellow99:node-bridge:0.2.0` + `node-runtime:24.22.1`（不依赖 mavenLocal） | ✅ Central 已核录（2026-10-27 发布）；2026-10-29 对 Central AAR 实测 verify-runtime 全绿（libnode.so SHA-256=lock） |
+| R8 | 失败可观测 | 载荷五步、APK 构建、发布各自独立 step，失败可直接定位到步；产物同时以 artifact 形式上传留存 | ✅ 断言 T-C10a-d |
 
 ## 3. 边界与非目标
 
