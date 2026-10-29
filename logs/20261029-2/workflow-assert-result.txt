@@ -1,0 +1,29 @@
+PASS  T-C3a push.tags == [v*]
+PASS  T-C3b workflow_dispatch 存在
+PASS  J1 job build-apk@ubuntu-latest
+PASS  J2 permissions.contents=write
+PASS  J3 上游 ref=完整基线SHA
+PASS  J4 上游 fetch-depth=0
+PASS  T-C4a apply-patches --repo
+PASS  T-C4b build-opencode + OPENCODE_NODE_TARGET=node24 + OPENCODE_DIR
+PASS  T-C4c collect-plugins
+PASS  T-C4d collect-opencode OPENCODE_DIR
+PASS  T-C4e smoke-node24 OPENCODE_DIR
+PASS  T-C4f 不含 OPENCODE_TARGET 覆写（走默认 linux-arm64）
+PASS  T-C4g 不含 --skip-install（CI 需 bun install）
+PASS  T-C5a secrets 注入四名齐全
+PASS  T-C5b 有 secrets→release（keystore.properties 键名与 sample 同口径）
+PASS  T-C5c 无 secrets→debug 兜底
+PASS  T-C5d gradle assemble${VARIANT}
+PASS  T-C5e secrets 部分配置→显式报错（四值齐备断言）
+PASS  FIX-C1a AAR 预取步存在且先于载荷④
+PASS  FIX-C1b 从 Central 拉取 24.22.1 AAR
+PASS  FIX-C1c OC_NODE_RUNTIME_AAR 注入 GITHUB_ENV
+PASS  FIX-C2 产物文件名全小写（app-${VARIANT,,}.apk，对齐 AGP 输出）
+PASS  FIX-R3 gradlew --stacktrace 保留
+PASS  T-C10a 收集产物含 sha256sum
+PASS  T-C10b upload-artifact 留存 dist/
+PASS  T-C10c Release 仅 tag 触发条件
+PASS  T-C10d Release 附件含 apk+sha256
+
+ALL PASS
