@@ -12,7 +12,7 @@
 |---|---|---|
 | runner | `ubuntu-latest` | hosted 预装 Android SDK（license 已接受，缺组件 AGP 自动补装）、git、bash |
 | Node | `24`（actions/setup-node@v4） | 脚本执行 + `smoke-node24` host 门禁（本机实证 v24.7.0 同代） |
-| bun | `1.3.14`（oven-sh/setup-bun@v2，钉死） | 上游 `bun install` + `build-node.ts`；与本机实证版本一致 |
+| bun | `1.4.2`（oven-sh/setup-bun@v2，钉死） | 上游 `build-node.ts` 版本守卫要求 `bun@^1.4.2`（CI 首跑实证：1.3.14 被拒）；README 快速开始同口径 |
 | JDK | `17` temurin（actions/setup-java@v4，`cache: gradle`） | AGP 8.9.2 要求；顺带 Gradle 缓存 |
 | Android SDK | hosted 预装 | compileSdk 36；hosted 镜像含 platform/build-tools，缺口 AGP 自动下载 |
 | 引擎双包 | Maven Central | `node-bridge:0.2.0` + `node-runtime:24.22.1` 已发布（2026-10-27 实证），`settings.gradle.kts` 的 `mavenLocal()` 在 CI 为空但会顺位落到 `mavenCentral()` |
@@ -90,7 +90,7 @@ APK `versionName=2.1.2/versionCode=20102` 维持 D16 冻结；tag 只进 Release
 |---|---|
 | `actions/checkout` 拉取任意 SHA 需服务端 `allowReachableSHA1InWant` | GitHub 默认允许拉取可达 SHA；`a517687fde` 在 Branch_v2.1.2 可达 |
 | hosted runner 缺 platform 36 | AGP 自动补装（hosted license 预接受）；如失效再显式 `android-actions/setup-android` |
-| bun 小版本漂移导致上游构建差异 | setup-bun 钉死 `1.3.14`（本机同版本实证） |
+| bun 版本漂移导致上游构建差异 | setup-bun 钉死 `1.4.2`（上游守卫 `^1.4.2` 硬约束，CI 首跑彩排实证） |
 | `mavenLocal()` 空目录告警 | 仅为顺位仓库；`node-runtime:24.22.1` 已在 Central，实测可解析 |
 | smoke-node24 需 Node ≥ 引擎同代 | setup-node 钉 24 |
 | workflow_dispatch 时 `$GITHUB_REF_NAME` 为分支名 | 文件名兜底使用 ref_name，不发布 Release，无歧义 |

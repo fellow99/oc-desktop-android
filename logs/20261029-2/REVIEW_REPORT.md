@@ -33,6 +33,13 @@
 | R-彩排 | workflow_dispatch 先彩排再打 tag | ✅ 采纳，写入最终报告与 T-C9 建议 | 移交用户 |
 | R-abbrev | core.abbrev + fetch-depth:1 优化 | 记录不采纳（YAGNI）：现状正确，全量克隆成本可接受，不为省几分钟引入新面 | 留档 |
 
+## 彩排轮补充（2026-10-29，CI 首跑 run 40866663919）
+
+- **首跑实证（绿的部分）**：上游 checkout（完整 SHA + fetch-depth:0）✅、AAR 预取 ✅、载荷① apply-patches 基线守卫 ✅ —— 评审 Critical#1 的前置路径全部真实通过。
+- **首跑炸点（bun 版本）**：载荷② `build-node.ts` 版本守卫 `requires bun@^1.4.2`，CI 钉的 1.3.14 被拒。
+- **I3 处置修正（诚实记录）**：评审 Important#3 指出 bun 口径打架时给了两个方向；我当时按"PATH 上 `bun --version`=1.3.14"统一到 1.3.14，**方向搞反了**——README 原口径 `<bun-1.4.2>` 才是本机实际构建所用（经 BUN_BIN 指定），上游守卫 `^1.4.2` 是硬约束。教训：统一版本口径时应以**构建链最末端消费者的守卫**为准，而非当前 shell 的 PATH 版本。已修：workflow/README/plan 统一 1.4.2。
+- 复跑见 REVIEW_REPORT 同级 TEST_REPORT 回归记录与第二次 run。
+
 ## 修复后回归
 
 - workflow 结构断言 **28/28 ALL PASS**（原 21 项 + T-C5e、FIX-C1a/b/c、FIX-C2、FIX-R3）；证据 `workflow-assert-result.txt`（已滚动覆盖）。

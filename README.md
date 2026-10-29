@@ -26,7 +26,7 @@
 ```bash
 # ① 上游产物（host 侧；补丁 → bun → bundle-only → 裁剪 → 插件物化 → tar.gz）
 node scripts/apply-patches.mjs            # 幂等补丁 + 基线守卫（Branch_v2.1.2；7 条 = ark 五件套 + 0009/0010）
-OPENCODE_NODE_TARGET=node24 BUN_BIN=<bun-1.3.14> node scripts/build-opencode.mjs   # --bundle-only（bun 版本=CI 钉死口径）
+OPENCODE_NODE_TARGET=node24 BUN_BIN=<bun-1.4.2> node scripts/build-opencode.mjs   # --bundle-only（上游 build-node 守卫要求 bun ^1.4.2；CI 同口径）
 node scripts/collect-plugins.mjs          # 插件物化（git/workspace-roots/search → build/plugins）
 node scripts/collect-opencode.mjs         # verify-runtime 门禁 + 插件入包 → assets/opencode-dist.tar.gz + SHA-256 清单
 node scripts/smoke-node24.mjs             # host 门禁（含品牌 title 断言；全绿才打包）
