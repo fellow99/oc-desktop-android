@@ -44,3 +44,8 @@ app/src/main/assets/opencode-dist.manifest.json
 # 构建与物化缓存（build/plugins 由 collect-plugins 生成；.cache 为 npm 依赖缓存）
 build/
 .cache/
+
+# pnpm 运行时（collect-plugins 按 pin 获取，不入 git）
+plugins/oc-plugin-pnpm/pnpm.cjs
+plugins/oc-plugin-pnpm/worker.js
+plugins/oc-plugin-pnpm/pnpmrc

@@ -29,6 +29,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { gunzipSync } from 'node:zlib'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -38,6 +39,7 @@ const cacheDir = path.join(root, '.cache', 'git-plugin-runtime')
 
 /** 依赖 pin（与 plugins/oc-plugin-git/lib/runtime.js 的运行时断言一致，双保险）。 */
 export const PINS = {
+  pnpm: '10.34.9',
   isomorphicGit: '1.44.2',
   diff: '9.0.0',
   diffMajor: 9,
@@ -58,6 +60,8 @@ const PLUGINS = [
   },
   { name: 'oc-plugin-workspace-roots', files: ['index.mjs', 'package.json'], optional: ['README.md'], needsDeps: false },
   { name: 'oc-plugin-search', files: ['index.js', 'package.json'], optional: ['README.md'], needsDeps: false },
+
+  { name: 'oc-plugin-pnpm', files: ['index.js', 'package.json', 'pnpm-worker.cjs'], optional: ['README.md'], needsDeps: false, needsPnpmRuntime: true },
 ]
 
 function fail(message) {
@@ -189,6 +193,80 @@ function installDeps() {
   console.log(`✓ 依赖已缓存：${path.relative(root, path.join(cacheDir, 'node_modules'))}`)
 }
 
+/** pnpm 运行时（10.34.9 dist 目录形态：pnpm.cjs+worker.js+pnpmrc）按 pin 获取并缓存。 */
+function pnpmCacheDir() { return path.join(root, '.cache', 'pnpm-dist') }
+function pnpmCacheHit() {
+  return existsSync(path.join(pnpmCacheDir(), 'pnpm.cjs')) && existsSync(path.join(pnpmCacheDir(), 'worker.js'))
+}
+/** 极简 ustar 解包（gzip 全量入内存；支持 prefix 拆分与 pax path 覆盖；只要常规文件/目录）。 */
+function untarGz(tgzPath, destDir) {
+
+  let buf = gunzipSync(readFileSync(tgzPath))
+  const readStr = (off, len) => buf.subarray(off, off + len).toString('utf8').replace(/\0.*$/, '').trim()
+  let paxPath = null
+  let at = 0
+  while (at + 512 <= buf.length) {
+    const header = buf.subarray(at, at + 512)
+    if (header.every((b) => b === 0)) break
+    let name = readStr(0, 100)
+    const size = parseInt(readStr(124, 12), 8) || 0
+    const type = String.fromCharCode(header[156] || 0x30)
+    const prefix = readStr(345, 155)
+    if (prefix) name = `${prefix}/${name}`
+    const dataStart = at + 512
+    const dataEnd = dataStart + size
+    if (type === 'x' || type === 'g') {
+      // pax 头：逐条解析 "len key=value\n"，取 path 记录
+      const body = buf.subarray(dataStart, dataEnd).toString('utf8')
+      let pos = 0
+      while (pos < body.length) {
+        const sp = body.indexOf(' ', pos)
+        if (sp < 0) break
+        const len = parseInt(body.slice(pos, sp), 10)
+        if (!Number.isFinite(len) || len <= 0) break
+        const rec = body.slice(pos + sp + 1, pos + len)
+        const eq = rec.indexOf('=')
+        if (eq > 0 && rec.slice(0, eq) === 'path') { paxPath = rec.slice(eq + 1); break }
+        pos += len
+      }
+    } else if (type === 'L') {
+      paxPath = buf.subarray(dataStart, dataEnd).toString('utf8').replace(/\0.*$/, '')
+    } else if (type === '0' || type === '\0' || type === '5') {
+      const finalName = paxPath ?? name
+      paxPath = null
+      if (!finalName) { at = dataEnd + ((512 - (size % 512)) % 512); continue }
+      const target = path.join(destDir, finalName)
+      if (!target.startsWith(path.resolve(destDir))) throw new Error(`tar 路径穿越：${finalName}`)
+      if (type === '5') {
+        mkdirSync(target, { recursive: true })
+      } else {
+        mkdirSync(path.dirname(target), { recursive: true })
+        writeFileSync(target, buf.subarray(dataStart, dataEnd))
+      }
+    }
+    at = dataEnd + ((512 - (size % 512)) % 512)
+  }
+}
+
+function fetchPnpmRuntime() {
+  if (pnpmCacheHit()) return
+  const ver = PINS.pnpm
+  const tmp = mkdtempSync(path.join(tmpdir(), 'oc-pnpm-'))
+  console.log(`→ 获取 pnpm 运行时：pnpm@${ver}（npm pack → ${tmp}）`)
+  try {
+    // npm install --prefix 让 npm 自解包（绕开手写 tar 解析对 npm tar 变体的兼容黑洞）
+    execFileSync('npm', ['install', `pnpm@${ver}`, '--prefix', tmp, '--no-save', '--ignore-scripts', '--no-audit', '--no-fund', '--loglevel=error'], { stdio: 'inherit', shell: WIN })
+    const dist = path.join(tmp, 'node_modules', 'pnpm', 'dist')
+    for (const f of ['pnpm.cjs', 'worker.js', 'pnpmrc']) {
+      if (!existsSync(path.join(dist, f))) throw new Error(`dist 缺 ${f}`)
+      cpSync(path.join(dist, f), path.join(pnpmCacheDir(), f))
+    }
+  } finally {
+    rmSync(tmp, { recursive: true, force: true })
+  }
+  console.log(`✓ pnpm 运行时已缓存：${path.relative(root, pnpmCacheDir())}（v${ver}）`)
+}
+
 function stageOne(p) {
   const src = assertPluginSource(p)
   const dest = path.join(stageDir, p.name)
@@ -197,6 +275,12 @@ function stageOne(p) {
   for (const f of p.files) cpSync(path.join(src, f), path.join(dest, f), { recursive: true })
   for (const f of p.optional) {
     if (existsSync(path.join(src, f))) cpSync(path.join(src, f), path.join(dest, f), { recursive: true })
+  }
+  if (p.needsPnpmRuntime) {
+    if (!CHECK_ONLY) {
+      fetchPnpmRuntime()
+      for (const f of ['pnpm.cjs', 'worker.js', 'pnpmrc']) cpSync(path.join(pnpmCacheDir(), f), path.join(dest, f))
+    }
   }
   if (p.needsDeps) {
     if (!cacheHit()) {
@@ -227,7 +311,7 @@ function stageOne(p) {
 function main() {
   for (const p of PLUGINS) assertPluginSource(p)
   if (CHECK_ONLY) {
-    console.log('✓ --check-only：三插件源静态断言通过（21 工具 / 无子进程 / 无原生模块）')
+    console.log('✓ --check-only：四插件源静态断言通过（21 工具 / 无子进程 / 无原生模块）')
     return
   }
   if (FORCE) rmSync(cacheDir, { recursive: true, force: true })

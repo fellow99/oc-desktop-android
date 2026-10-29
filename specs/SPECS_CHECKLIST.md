@@ -38,7 +38,7 @@
 | M-111 | 基线迁移 v2.1.2 | [spec](./111-version-2.1.2/spec.md) | ⬜ Pending | 对标 ark 111 |
 | M-112 | JS 搜索兜底（grep/glob） | [spec](./112-js-search/spec.md) | 🔶 Done（host 20261029） | oc-plugin-search；夹具用例全过 |
 | M-203 | 工作区选择器（SAF 导入制） | [spec](./203-workspace-picker/spec.md) | 🔶 Done（host 20261029） | 0007/0009 + 插件 RPC 实弹；SAF 实机随真机轮 |
-| M-205 | pnpm 插件（本工程新增） | [spec](./205-pnpm-plugin/spec.md) | ⬜ Pending | D13 全量档位 |
+| M-205 | pnpm 插件（本工程新增） | [spec](./205-pnpm-plugin/spec.md) + [as-built](./205-pnpm-plugin/as-built.md) | 🔶 Done（host 20261029-2） | 五工具（run 平台证伪降级）；P0-M 冻结 |
 
 ## 三、需求覆盖对照（本迭代 `000-scaffold`）
 
