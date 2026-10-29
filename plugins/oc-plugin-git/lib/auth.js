@@ -29,7 +29,19 @@ export class CredentialRejectedError extends Error {
 
 /** 回显前的 URL 脱敏：去掉 userinfo，避免把 token/口令带进对话与元数据 */
 export function redactUrl(url) {
-  return String(url ?? "").replace(/\/\/[^@/]*@/u, "//")
+  /* 评审 M9：口令可能含字面 `/`，脱敏必须吃掉整个 userinfo（到 `@` 为止）而不是停在第一个斜杠。
+   * 优先走 URL 解析（对百分号编码的 userinfo 精确）；解析失败再退回正则兜底。 */
+  const text = String(url ?? "")
+  try {
+    const parsed = new URL(text)
+    if (parsed.username || parsed.password) {
+      parsed.username = "*"
+      parsed.password = ""
+    }
+    return parsed.toString()
+  } catch {
+    return text.replace(/\/\/[^@]*@/u, "//")
+  }
 }
 
 /** 从 git 远端 URL 取出匹配所需的三元组 */

@@ -1,11 +1,12 @@
 diff --git a/packages/app/src/workspaces/selection/dialog.tsx b/packages/app/src/workspaces/selection/dialog.tsx
-index 277edb3b95..007525cd59 100644
+index 277edb3b95..2bb1ed1b50 100644
 --- a/packages/app/src/workspaces/selection/dialog.tsx
 +++ b/packages/app/src/workspaces/selection/dialog.tsx
-@@ -36,10 +36,13 @@ import {
+@@ -36,11 +36,16 @@ import {
    defaultFolderName,
    entryName,
    filterHiddenEntries,
++  importCancelOf,
 +  importSandboxTree,
 +  importStatusOf,
    isWithin,
@@ -14,19 +15,22 @@ index 277edb3b95..007525cd59 100644
    relativeFromRoot,
 +  removeSandboxProject,
    requestDirectoryPermission,
++  setCurrentProject,
    type RootId,
  } from "./roots"
-@@ -102,6 +105,9 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
+ import "./dialog.css"
+@@ -102,6 +107,10 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
    /** 根层列举被截断（超过 500 项）：如实提示，不静默丢条目（NFR-203-002） */
    const [truncated, setTruncated] = createSignal(false)
    const [permissionBusy, setPermissionBusy] = createSignal(false)
 +  /** Android（203 R1）：SAF 导入 / 删除项目（能力由 roots.latest.capabilities 自门控） */
 +  const [importBusy, setImportBusy] = createSignal(false)
++  const [importToken, setImportToken] = createSignal("")
 +  const [importMessage, setImportMessage] = createSignal("")
    const [newFolderOpen, setNewFolderOpen] = createSignal(false)
    const [newFolderName, setNewFolderName] = createSignal("")
    const [newFolderError, setNewFolderError] = createSignal("")
-@@ -440,6 +446,63 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
+@@ -440,6 +449,83 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
      await navigate(active.path)
    }
  
@@ -35,16 +39,33 @@ index 277edb3b95..007525cd59 100644
 +  const canRemoveHere = () => sandboxCaps().includes("remove") && access() === "granted" && root().split("/").filter(Boolean).length > 0
 +
 +  /** 「导入(SAF)」：发起到完成轮询 importStatus（进度条文案走 accessMessage 区，R3） */
++  /** 导入进行中时该按钮变为「取消」（0009 v2：评审 M7/I7） */
++  async function cancelImport() {
++    if (!importToken()) return
++    await importCancelOf(sdk, importToken())
++  }
++
++  /** 「设为默认」：把当前选中项目的第一段设为启动默认工作区（203 R4 的 UI 入口） */
++  async function setDefaultProject() {
++    const first = root().split("/").filter(Boolean)[0]
++    if (!first || importBusy()) return
++    const result = await setCurrentProject(sdk, first)
++    setImportMessage(result.ok ? language.t("dialog.directory.roots.setDefaultDone") + ": " + first : language.t("dialog.directory.roots.importFailed") + ": " + result.message)
++    if (result.ok) await rootsActions.refetch()
++  }
++
 +  async function importViaSaf() {
 +    if (importBusy()) return
 +    setImportBusy(true)
 +    setImportMessage(language.t("dialog.directory.roots.importing"))
 +    try {
 +      const started = await importSandboxTree(sdk, "")
++      if (importToken() && importBusy()) return // 已有进行中任务：按钮此时是「取消」
 +      if (!started.ok || !started.token) {
 +        setImportMessage(language.t("dialog.directory.roots.importFailed") + (started.message ? ": " + started.message : ""))
 +        return
 +      }
++      setImportToken(started.token)
 +      for (let i = 0; i < 3600; i++) {
 +        await new Promise((resolve) => setTimeout(resolve, 500))
 +        const status = await importStatusOf(sdk, started.token)
@@ -53,7 +74,7 @@ index 277edb3b95..007525cd59 100644
 +          return
 +        }
 +        if (status.canceled) {
-+          setImportMessage(language.t("dialog.directory.roots.importFailed"))
++          setImportMessage(language.t("dialog.directory.roots.importCanceled"))
 +          return
 +        }
 +        if (status.done) {
@@ -69,6 +90,7 @@ index 277edb3b95..007525cd59 100644
 +      }
 +      setImportMessage(language.t("dialog.directory.roots.importFailed"))
 +    } finally {
++      setImportToken("")
 +      setImportBusy(false)
 +    }
 +  }
@@ -77,6 +99,8 @@ index 277edb3b95..007525cd59 100644
 +  async function removeSelectedProject() {
 +    const first = root().split("/").filter(Boolean)[0]
 +    if (!first || importBusy()) return
++    // 不可逆批量删除：必须二次确认（评审 M7）
++    if (!globalThis.confirm(language.t("dialog.directory.roots.removeConfirm") + ": " + first)) return
 +    const result = await removeSandboxProject(sdk, first)
 +    if (result.ok) {
 +      setSelected("")
@@ -90,7 +114,7 @@ index 277edb3b95..007525cd59 100644
    /** 「刷新」：重新探测三根，再重判当前主目录（FR-203-024） */
    async function refreshAccess() {
      setAccess("checking")
-@@ -770,9 +833,22 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
+@@ -770,9 +856,27 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
              </Show>
            </Show>
          </div>
@@ -101,8 +125,13 @@ index 277edb3b95..007525cd59 100644
        </DialogBody>
        <DialogFooter>
 +        <Show when={canImportHere()}>
-+          <Button variant="neutral" disabled={importBusy()} onClick={() => void importViaSaf()}>
-+            {language.t("dialog.directory.roots.import")}
++          <Button variant="neutral" onClick={() => void (importBusy() ? cancelImport() : importViaSaf())}>
++            {importBusy() ? language.t("common.cancel") : language.t("dialog.directory.roots.import")}
++          </Button>
++        </Show>
++        <Show when={sandboxCaps().includes("setCurrent") && access() === "granted"}>
++          <Button variant="neutral" disabled={importBusy()} onClick={() => void setDefaultProject()}>
++            {language.t("dialog.directory.roots.setDefault")}
 +          </Button>
 +        </Show>
 +        <Show when={canRemoveHere() && !importBusy()}>
@@ -114,7 +143,7 @@ index 277edb3b95..007525cd59 100644
            {language.t("common.cancel")}
          </Button>
 diff --git a/packages/app/src/workspaces/selection/roots.ts b/packages/app/src/workspaces/selection/roots.ts
-index 856bfd45e4..be8c09368e 100644
+index 856bfd45e4..3352fb8106 100644
 --- a/packages/app/src/workspaces/selection/roots.ts
 +++ b/packages/app/src/workspaces/selection/roots.ts
 @@ -29,6 +29,8 @@ export type RootInfo = {
@@ -136,7 +165,7 @@ index 856bfd45e4..be8c09368e 100644
    }
  }
  
-@@ -275,3 +280,36 @@ export async function requestDirectoryPermission(sdk: RpcSdk, id: RootId): Promi
+@@ -275,3 +280,56 @@ export async function requestDirectoryPermission(sdk: RpcSdk, id: RootId): Promi
    }
    return { ok: false, code: "empty-output", granted: false, bridgeUnavailable: true, timeout: false, message: "" }
  }
@@ -173,11 +202,31 @@ index 856bfd45e4..be8c09368e 100644
 +    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
 +  }
 +}
++
++export async function importCancelOf(sdk: RpcSdk, token: string): Promise<ActionResult> {
++  try {
++    const output = (await sdk.api.rpc.call({ rpcID: ROOTS_RPC_ID, method: "importCancel", input: { token } })).output
++    const r = (output ?? {}) as Record<string, unknown>
++    return { ok: r.ok === true, code: typeof r.code === "string" ? r.code : "", message: typeof r.message === "string" ? r.message : "" }
++  } catch (error) {
++    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
++  }
++}
++
++export async function setCurrentProject(sdk: RpcSdk, name: string): Promise<ActionResult> {
++  try {
++    const output = (await sdk.api.rpc.call({ rpcID: ROOTS_RPC_ID, method: "setCurrent", input: { name } })).output
++    const r = (output ?? {}) as Record<string, unknown>
++    return { ok: r.ok === true, code: typeof r.code === "string" ? r.code : "", message: typeof r.message === "string" ? r.message : "" }
++  } catch (error) {
++    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
++  }
++}
 diff --git a/packages/app/src/runtime/i18n/en.ts b/packages/app/src/runtime/i18n/en.ts
-index b13f71ec95..9387fe1263 100644
+index b13f71ec95..7676e517dc 100644
 --- a/packages/app/src/runtime/i18n/en.ts
 +++ b/packages/app/src/runtime/i18n/en.ts
-@@ -350,6 +350,11 @@ export const dict = {
+@@ -350,6 +350,14 @@ export const dict = {
    "dialog.directory.roots.unavailable": "This location is not available",
    "dialog.directory.roots.requestPermission": "Request access",
    "dialog.directory.roots.refresh": "Refresh",
@@ -185,15 +234,18 @@ index b13f71ec95..9387fe1263 100644
 +  "dialog.directory.roots.importing": "Importing…",
 +  "dialog.directory.roots.importDone": "Import finished",
 +  "dialog.directory.roots.importFailed": "Import failed",
++  "dialog.directory.roots.importCanceled": "Import canceled",
++  "dialog.directory.roots.setDefault": "Set as default",
++  "dialog.directory.roots.setDefaultDone": "Default workspace set",
 +  "dialog.directory.roots.remove": "Delete",
    "dialog.directory.roots.bridgeUnavailable":
      "The shell capability bridge is unavailable, so access cannot be requested from here. Enable it in Settings › Files and folders, then choose Refresh.",
    "dialog.directory.roots.truncated": "This folder has more entries than can be shown; only the first 500 are listed.",
 diff --git a/packages/app/src/runtime/i18n/zh.ts b/packages/app/src/runtime/i18n/zh.ts
-index 9aa547e1aa..879497392e 100644
+index 9aa547e1aa..8d0e3e7991 100644
 --- a/packages/app/src/runtime/i18n/zh.ts
 +++ b/packages/app/src/runtime/i18n/zh.ts
-@@ -332,6 +332,11 @@ export const dict = {
+@@ -332,6 +332,14 @@ export const dict = {
    "dialog.directory.roots.unavailable": "该位置当前不可用",
    "dialog.directory.roots.requestPermission": "请求权限",
    "dialog.directory.roots.refresh": "刷新",
@@ -201,6 +253,9 @@ index 9aa547e1aa..879497392e 100644
 +  "dialog.directory.roots.importing": "导入中…",
 +  "dialog.directory.roots.importDone": "导入完成",
 +  "dialog.directory.roots.importFailed": "导入失败",
++  "dialog.directory.roots.importCanceled": "已取消导入",
++  "dialog.directory.roots.setDefault": "设为默认",
++  "dialog.directory.roots.setDefaultDone": "已设为启动默认工作区",
 +  "dialog.directory.roots.remove": "删除",
    "dialog.directory.roots.bridgeUnavailable":
      "宿主能力桥不可用，无法从这里发起授权。请到 设置 › 本应用 › 文件和文件夹 中开启，然后点「刷新」。",

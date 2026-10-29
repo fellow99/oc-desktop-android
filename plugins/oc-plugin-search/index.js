@@ -102,7 +102,7 @@ export function walkFiles(root, base) {
     }
   }
   walk(base, '')
-  return { files, skippedDirs, scanned }
+  return { files, skippedDirs, scanned, scannedTruncated: scanned >= MAX_FILES_SCAN }
 }
 
 /** grep 核心（可单测）：在文件集内按行匹配。 */
@@ -112,6 +112,7 @@ export function grepFiles(files, base, { regex, include, maxResults }) {
   let truncated = false
   let skippedBinary = 0
   let skippedLarge = 0
+  let skippedLongLines = 0
   for (const f of files) {
     if (includeRe && !matchGlob(includeRe, f.rel)) continue
     let stat
@@ -124,7 +125,7 @@ export function grepFiles(files, base, { regex, include, maxResults }) {
     const split = text.split('\n')
     for (let i = 0; i < split.length; i++) {
       const line = split[i]
-      if (line.length > 2000) continue
+      if (line.length > 2000) { skippedLongLines++; continue }
       regex.lastIndex = 0
       if (!regex.test(line)) continue
       if (lines.length >= maxResults) { truncated = true; break }
@@ -132,7 +133,7 @@ export function grepFiles(files, base, { regex, include, maxResults }) {
     }
     if (truncated) break
   }
-  return { lines, truncated, skippedBinary, skippedLarge }
+  return { lines, truncated, skippedBinary, skippedLarge, skippedLongLines }
 }
 
 const GREP_INPUT = {
@@ -188,7 +189,7 @@ export default {
         } catch (error) {
           return { content: `正则无效：${error?.message ?? error}`, metadata: { ok: false, code: 'invalid-pattern' } }
         }
-        const { files, skippedDirs, scanned } = walkFiles(root, base)
+        const { files, skippedDirs, scanned, scannedTruncated } = walkFiles(root, base)
         const max = Math.min(Math.max(1, Number(input?.maxResults) || MAX_RESULTS), MAX_RESULTS)
         const r = grepFiles(files, base, { regex, include: input?.include, maxResults: max })
         const content = r.lines.length > 0
@@ -201,7 +202,8 @@ export default {
             matches: r.lines.length,
             truncated: r.truncated,
             scannedFiles: scanned,
-            skipped: { dirs: skippedDirs, binary: r.skippedBinary, large: r.skippedLarge },
+            skipped: { dirs: skippedDirs, binary: r.skippedBinary, large: r.skippedLarge, longLines: r.skippedLongLines },
+            scannedTruncated,
           },
         }
       },
@@ -223,7 +225,7 @@ export default {
         } catch (error) {
           return { content: `glob 无效：${error?.message ?? error}`, metadata: { ok: false, code: 'invalid-pattern' } }
         }
-        const { files, skippedDirs, scanned } = walkFiles(root, base)
+        const { files, skippedDirs, scanned, scannedTruncated } = walkFiles(root, base)
         const limit = Math.min(Math.max(1, Number(input?.limit) || MAX_RESULTS), MAX_RESULTS)
         const hits = []
         let truncated = false
@@ -240,6 +242,7 @@ export default {
             truncated,
             scannedFiles: scanned,
             skipped: { dirs: skippedDirs },
+            scannedTruncated,
           },
         }
       },
