@@ -45,6 +45,7 @@
 | 112 JS 搜索兜底（本工程新增） | [112-js-search/](./112-js-search/) | [spec.md](./112-js-search/spec.md) | 🔶 as-built（host） |
 | 203 工作区选择器 | [203-workspace-picker/](./203-workspace-picker/) | [spec.md](./203-workspace-picker/spec.md) | 🔶 as-built（host） |
 | 205 pnpm 插件（本工程新增） | [205-pnpm-plugin/](./205-pnpm-plugin/) | [spec.md](./205-pnpm-plugin/spec.md) | ⬜ planned |
+| 001 构建发布流程（需求模块） | [001-building-workflow/](./001-building-workflow/) | [spec.md](./001-building-workflow/spec.md) | 🚧 as-built（CI 端到端待真推 tag） |
 
 ## 四、写作纪律
 

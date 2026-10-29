@@ -51,3 +51,14 @@
 | 开发实现 + Android Studio 构建 | ✅ | `gradle :app:assembleDebug` 通过（Gradle 8.12 + AGP 8.9.2 + JDK 21，Android Studio JBR 可直接打开） |
 | 调试/测试（DeepSeek/工作区/对话/看图） | ✅ | 端到端四项全过（[真机验证记录](../docs/真机验证记录.md) 20261028-02） |
 | 敏感信息不落盘文档 | ✅ | 全仓 grep 校验（key/口令/auth_token 实值 0 命中，evidence 已脱敏） |
+
+## 四、需求覆盖对照（`001-building-workflow`，2026-10-29）
+
+| 需求项 | 状态 | 落点 |
+|---|---|---|
+| GitHub Actions 自动构建/发布（tag `v*` 触发，如 `v0.12.1`） | ✅ | [.github/workflows/build-release.yml](../.github/workflows/build-release.yml)（载荷五步 + APK + Release） |
+| 规格四件套 | ✅ | [001-building-workflow/](./001-building-workflow/)（spec/plan/tasks/test-cases） |
+| 签名材料零入库（secrets 注入，无则 debug 兜底） | ✅ | workflow 注秘 step + `keystore.properties.sample` 键名同口径 |
+| 引擎双包 Central 解析（CI 无 mavenLocal 依赖） | ✅ | node-bridge 0.2.0 / node-runtime 24.22.1 Central 实证（2026-10-27） |
+| 本机等价验证（基线守卫 + assembleDebug + 21 项 workflow 断言） | ✅ | [logs/20261029-2/TEST_REPORT.md](../logs/20261029-2/TEST_REPORT.md) |
+| 真实 tag 端到端（push v0.12.1） | ⬜ | 需仓库推送权限，用户侧执行（spec §3 边界） |
