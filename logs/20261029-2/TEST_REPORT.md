@@ -3,10 +3,12 @@
 > 用例源：[specs/001-building-workflow/test-cases.md](../../specs/001-building-workflow/test-cases.md) · 执行：2026-10-29（含评审修复后回归）
 > 证据目录：本文件同级（workflow-assert-result.txt / yaml-parse-output.json）
 
-## 结果汇总：本机可验 12/12 绿 · 用户侧 1 项待执行（T-C9）
+## 结果汇总：本机可验 12/12 绿 · **CI 真跑彩排（debug 版）全绿** · tag 正式发布待用户
 
 > 回归口径：评审（REVIEW_REPORT）两 Critical + 一 Important + 两 Minor + gradlew mode 全部修复后，
 > 结构断言从 21 项扩至 **28 项 ALL PASS**（workflow-assert-result.txt 已滚动覆盖）。
+> **CI 彩排**（2026-10-29）：首跑 run 40866663919 红于 bun 版本守卫（已修 1.4.2）→
+> 复跑 run [40867423494](https://github.com/fellow99/oc-desktop-android/actions/runs/40867423494) **success**（16 业务 step 全绿，6m06s）。
 
 | # | 用例 | 结果 | 证据/说明 |
 |---|---|---|---|
@@ -18,7 +20,7 @@
 | T-C6 | 签名材料零入库 | ✅ | `git check-ignore -v`：`keystore.properties`（.gitignore:38）、`oc-desktop-android.keystore`（.gitignore:29）；git 追踪集无敏感文件 |
 | T-C7 | APK 构建步等价（本机） | ✅ | `./gradlew :app:assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk`（163,944,484 字节，2026-10-29 09:37） |
 | T-C8 | 基线守卫等价（本机） | ✅ | `OPENCODE_DIR=… node scripts/collect-opencode.mjs --check` → `上游基线：HEAD=a517687fde version=2.1.2`，exit 0 |
-| T-C9 | tag 触发端到端 | ⬜ | 需仓库推送权限（`git push origin v0.12.1`），用户侧执行；预期：workflow 全绿 → Release 附件 APK + .sha256 |
+| T-C9 | tag 触发端到端 | ✅（彩排口径） | **2026-10-29 CI 真跑通过**：workflow_dispatch debug 版（run [40867423494](https://github.com/fellow99/oc-desktop-android/actions/runs/40867423494)）16 业务 step 全绿，`:app:assembleDebug` BUILD SUCCESSFUL（2m6s），产物 `oc-desktop-android-main.apk` 125,401,263 B + `.sha256`，artifact 留存；Release 步按设计 skipped。首跑 run 40866663919 红于 bun 守卫已修。正式 `v0.12.1` tag 发布待用户 |
 | T-C10 | 失败可观测 | ✅ | 五步/签名/构建/收集/artifact/发布独立 step 命名；`dist/` 无论发布与否均上传 artifact（断言 T-C10a–d） |
 | T-C11 | 引擎 AAR 门禁冷缓存等价 | ✅ | Central AAR（27,607,401 B）下载后 `OC_NODE_RUNTIME_AAR=<Central AAR> node scripts/verify-runtime.mjs` **全绿**（libnode.so SHA-256=lock `be1d1641…`，ELF 门禁全过）；workflow AAR 预取步断言 FIX-C1a–c PASS |
 | T-C12 | 产物文件名对齐 AGP 输出 | ✅ | 收集产物 step 已改 `app-${VARIANT,,}.apk` 全小写（断言 FIX-C2 PASS）；与 T-C7 实测产物名 `app-debug.apk` 一致 |
@@ -36,4 +38,4 @@
 
 ## 结论
 
-本机可验判据全绿（12/12）；评审两 Critical（verify-runtime 冷缓存 / 产物文件名）已在修复后以扩展断言回归收口；真实 tag 端到端（T-C9）为仓库权限操作，移交用户，**建议先 `workflow_dispatch` 手动彩排一轮全绿后再推 `v0.12.1`**。
+本机可验判据全绿（12/12）；评审两 Critical（verify-runtime 冷缓存 / 产物文件名）已在修复后以扩展断言回归收口。**CI 真跑彩排（debug 版）已通过**（run 40867423494，16 step 全绿 + APK 产物核录）；首跑暴露的 bun 版本守卫（`^1.4.2`）已修复并复跑验证。剩余唯一动作：用户推送 `v0.12.1` tag 触发正式构建发布（与彩跑唯一差异 = Release step 启用 + 文件名 tag 化）。

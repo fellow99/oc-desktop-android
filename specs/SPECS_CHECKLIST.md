@@ -61,4 +61,4 @@
 | 签名材料零入库（secrets 注入，无则 debug 兜底） | ✅ | workflow 注秘 step + `keystore.properties.sample` 键名同口径 |
 | 引擎双包 Central 解析（CI 无 mavenLocal 依赖） | ✅ | node-bridge 0.2.0 / node-runtime 24.22.1 Central 实证（2026-10-27） |
 | 本机等价验证（基线守卫 + assembleDebug + 21 项 workflow 断言） | ✅ | [logs/20261029-2/TEST_REPORT.md](../logs/20261029-2/TEST_REPORT.md) |
-| 真实 tag 端到端（push v0.12.1） | ⬜ | 需仓库推送权限，用户侧执行（spec §3 边界） |
+| 真实 tag 端到端（push v0.12.1） | 🔶 彩排已过 | workflow_dispatch debug 版 CI 真跑全绿（run 40867423494，2026-10-29）；正式 `v0.12.1` tag 触发发布待用户推送 |
