@@ -1,6 +1,7 @@
 package org.fellow99.oc.desktop.android
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -49,9 +50,56 @@ object HostCapabilities {
             }.toString()
         }
 
-        rt.host.register("notify") {
-            // Phase 3（D15）才做通知；v1 如实报 not-implemented
-            JSONObject().put("ok", false).put("error", "notify: Phase 3 未实现（D15）").toString()
+        rt.host.register("notify") { args ->
+            // D15/Phase 3：应用内通知（长任务完成提醒）。13+ 需通知授权（保活开启时已请求）。
+            runCatching {
+                val title = JSONObject(args).optString("title", "OC Desktop")
+                val body = JSONObject(args).optString("body")
+                val manager = App.appContext.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+                if (Build.VERSION.SDK_INT >= 26) {
+                    manager.createNotificationChannel(
+                        android.app.NotificationChannel("notify", "应用通知", android.app.NotificationManager.IMPORTANCE_DEFAULT),
+                    )
+                }
+                val builder = if (Build.VERSION.SDK_INT >= 26) android.app.Notification.Builder(App.appContext, "notify") else android.app.Notification.Builder(App.appContext)
+                builder.setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle(title).setContentText(body)
+                val nm = if (Build.VERSION.SDK_INT >= 33) {
+                    // 33+ 未授权时 notify() 静默失败——如实上报授权状态
+                    if (App.appContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                        manager.notify(42003, builder.build()); "granted"
+                    } else "notifications-not-granted"
+                } else { manager.notify(42003, builder.build()); "granted" }
+                JSONObject().put("ok", true).put("permission", nm)
+            }.getOrElse {
+                JSONObject().put("ok", false).put("error", it.message ?: "notify failed")
+            }.toString()
+        }
+
+        rt.host.register("keepalive.set") { args ->
+            // D15/Phase 3：可选前台服务保活开关（持久化；默认关）
+            runCatching {
+                val enabled = JSONObject(args).optBoolean("enabled")
+                KeepaliveService.prefs(App.appContext).edit().putBoolean("enabled", enabled).apply()
+                val activity = MainActivity.instanceOrNull()
+                    ?: return@register JSONObject().put("ok", false).put("error", "MainActivity 未就绪").toString()
+                activity.runOnUiThread {
+                    if (enabled) KeepaliveService.start(activity) else KeepaliveService.stop(activity)
+                }
+                JSONObject().put("ok", true).put("enabled", enabled)
+            }.getOrElse {
+                JSONObject().put("ok", false).put("error", it.message ?: "keepalive.set failed")
+            }.toString()
+        }
+
+        rt.host.register("keepalive.get") {
+            runCatching {
+                JSONObject()
+                    .put("ok", true)
+                    .put("enabled", KeepaliveService.prefs(App.appContext).getBoolean("enabled", false))
+                    .toString()
+            }.getOrElse {
+                JSONObject().put("ok", false).put("error", it.message ?: "keepalive.get failed").toString()
+            }
         }
 
         rt.host.register("saf.pickFolder") { args ->

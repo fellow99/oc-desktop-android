@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -122,14 +123,27 @@ class MainActivity : Activity() {
         super.onBackPressed()
     }
 
-    /** 关于页（107 G6/G3）：非官方声明 + 第三方许可指引（P1-4）。 */
+    /** 关于页（107 G6/G3 + D15 保活开关）：非官方声明 + 许可指引 + 可选保活切换。 */
     private fun showAbout() {
         val pm = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
         val version = pm?.versionName ?: "?"
+        val keepOn = KeepaliveService.prefs(this).getBoolean("enabled", false)
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.about_title))
             .setMessage(getString(R.string.about_body, version))
             .setPositiveButton("关闭", null)
+            .setNeutralButton(if (keepOn) "保活: 开（点击关闭）" else "保活: 关（点击开启）") { _, _ ->
+                val next = !keepOn
+                KeepaliveService.prefs(this).edit().putBoolean("enabled", next).apply()
+                if (next) {
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 42004)
+                    }
+                    KeepaliveService.start(this)
+                } else KeepaliveService.stop(this)
+                Diagnostics.evidence(this, "keepalive toggled")
+                showAbout()
+            }
             .show()
     }
 

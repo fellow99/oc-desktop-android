@@ -8,5 +8,10 @@
     <string name="about_body">OC Desktop Android %1$s
 \n本应用与 opencode 团队无隶属关系：opencode 为 MIT 开源项目，本应用是其桌面形态在 Android 上的第三方移植（非官方）。
 \n随包分发的 Node.js、opencode、isomorphic-git、js-diff 及桥/引擎组件适用其上游许可（MIT 等），全文见随包 THIRD-PARTY-NOTICES。
-\n会话、凭据与工作区数据全部保存在本机应用沙箱内。</string>
+\n会话、凭据与工作区数据全部保存在本机应用沙箱内；本应用不收集任何设备或使用信息，网络访问仅限模型服务与包管理镜像。</string>
+
+    <!-- 保活（D15，默认关；Phase 3） -->
+    <string name="keepalive_channel">后台保活</string>
+    <string name="keepalive_title">OC Desktop 运行中</string>
+    <string name="keepalive_text">长会话保活已开启（可在应用内关闭）</string>
 </resources>
