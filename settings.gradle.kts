@@ -2,8 +2,9 @@
 //
 // 仓库策略（与 aosp-node-bridge 同款）：
 //   · 阿里云镜像前置（本机 dl.google.com / maven.google.com 不可达；镜像 404 自动回退官方仓库）；
-//   · mavenLocal() 提供 small-icu 引擎 io.github.fellow99:node-runtime:24.22.1
-//     （由 aosp-node-runtime 仓 `publishToMavenLocal` 产出；Maven Central 尚未发布 24.22.1）。
+//   · mavenLocal() 曾用于提供 small-icu 引擎 io.github.fellow99:node-runtime:24.22.1；
+//     24.22.1 已于 2026-10-27 发布 Maven Central（本仓 verify-runtime 对 Central AAR 实测全绿），
+//     CI 无 mavenLocal 也能顺位解析；mavenLocal 仅供本机旧缓存加速，可留可删。
 pluginManagement {
     repositories {
         maven("https://maven.aliyun.com/repository/gradle-plugin")

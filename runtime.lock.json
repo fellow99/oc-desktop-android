@@ -6,7 +6,7 @@
     "bridge": "0.2.0",
     "maven": {
       "bridge": "io.github.fellow99:node-bridge:0.2.0 (Maven Central)",
-      "runtime": "io.github.fellow99:node-runtime:24.22.1 (mavenLocal / aosp-node-runtime publishToMavenLocal；Central 发布后切 Central)"
+      "runtime": "io.github.fellow99:node-runtime:24.22.1 (Maven Central，2026-10-27 发布；verify-runtime 对 Central AAR 实测全绿 2026-10-29)"
     },
     "libnodeSha256": "be1d16414a1e68983f27ac16e287395b71e4f4f5a79d78a78a741b583472397e",
     "libcxxSharedSha256": "cd61762848882a16c8244c964a6f396c0caa0b440588a210ce9cc4ab0e6d9f0c",
