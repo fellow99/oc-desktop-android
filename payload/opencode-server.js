@@ -17,6 +17,7 @@ const { pathToFileURL } = require('node:url');
 const { buildEnv } = require('./lib/env');
 const { appendLog, writeReady } = require('./lib/ready');
 const { ensureUnpacked } = require('./unpack');
+const { materializePlugins } = require('./lib/plugins');
 
 const FILES_DIR = process.env.OC_FILES_DIR || process.env.HOME || process.env.USERPROFILE || '';
 const SERVER_LOG = process.env.OC_SERVER_LOG || (FILES_DIR ? path.join(FILES_DIR, 'logs', 'server.log') : '');
@@ -97,9 +98,39 @@ async function main() {
   const unpacked = await ensureUnpacked({ tarFile: TAR_FILE, dist: DIST_DIR, version: VERSION, log });
   log(`payload ${unpacked.skipped ? '复用' : `新解包 files=${unpacked.files}`}`);
 
-  // ③ chdir 沙箱工作区（D14：filesDir/workspace/default 为脚手架默认项目根）
-  fs.mkdirSync(DEFAULT_WORKSPACE, { recursive: true });
-  process.chdir(DEFAULT_WORKSPACE);
+  // ②b 插件物化（D11）：opencode-dist/plugins/* → config/opencode/plugin/*（幂等 copy，禁 symlink）
+  const pluginResult = materializePlugins({
+    distPluginsDir: path.join(DIST_DIR, 'plugins'),
+    configPluginDir: path.join(FILES_DIR, 'config', 'opencode', 'plugin'),
+    log,
+  });
+  log(`plugins 物化=${pluginResult.materialized.length} 复用=${pluginResult.skipped.length} 字节=${pluginResult.totalBytes}`);
+
+  // ③ chdir 沙箱工作区（D14/203 R4：`workspace/.current` 指定的项目优先，否则 workspace/default）
+  fs.mkdirSync(WORKSPACE_ROOT, { recursive: true });
+  let project = DEFAULT_WORKSPACE;
+  try {
+    const current = fs.readFileSync(path.join(WORKSPACE_ROOT, '.current'), 'utf8').trim();
+    // 与插件侧 validateSegment 同口径（评审 M1）：拒路径分隔符/`..`/控制字符/点开头，防 chdir 逃逸
+    const bad = !current
+      || current.startsWith('.')
+      || current.includes('/') || current.includes('\\')
+      || /[\u0000-\u001f\u007f]/.test(current);
+    if (current && !bad) {
+      const candidate = path.join(WORKSPACE_ROOT, current);
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+        project = candidate;
+      } else {
+        log(`.current=${current} 不可用 → 回退 default`);
+      }
+    } else if (current) {
+      log(`.current 含非法字符 → 忽略，回退 default`);
+    }
+  } catch {
+    // 无 .current：用默认工作区
+  }
+  fs.mkdirSync(project, { recursive: true });
+  process.chdir(project);
   log(`cwd=${process.cwd()}`);
 
   // ④ 就绪嗅探
