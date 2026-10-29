@@ -1,0 +1,8 @@
+{
+  "name": "oc-plugin-search",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "description": "grep/glob pure-JS fallback tools (no rg/fff ELF on Android)"
+}

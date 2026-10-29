@@ -1,0 +1,8 @@
+{
+  "name": "oc-plugin-workspace-roots",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs",
+  "description": "Sandbox workspace roots (SAF import model) for the workspace picker UI"
+}
