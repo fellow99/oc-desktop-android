@@ -54,9 +54,39 @@ object HostCapabilities {
             JSONObject().put("ok", false).put("error", "notify: Phase 3 未实现（D15）").toString()
         }
 
-        rt.host.register("saf.pickFolder") {
-            // Phase 2（D14/203）：SAF 导入制工作区；脚手架阶段如实报 not-implemented
-            JSONObject().put("ok", false).put("error", "saf.pickFolder: Phase 2 未实现（D14/203）").toString()
+        rt.host.register("saf.pickFolder") { args ->
+            // P1-6 / 203 R2：SAF 导入制工作区。发起后立即返回 token；拷贝后台进行，
+            // 进度由插件经 importStatus 轮询 `workspace/.import-<token>.json`（SafImport 写入）。
+            runCatching {
+                val suggested = JSONObject(args).optString("suggestedName")
+                val activity = MainActivity.instanceOrNull()
+                    ?: return@register JSONObject().put("ok", false).put("error", "MainActivity 未就绪").toString()
+                SafImport.request(activity, suggested.ifEmpty { null }).toString()
+            }.getOrElse {
+                JSONObject().put("ok", false).put("error", it.message ?: "saf.pickFolder failed").toString()
+            }
+        }
+
+        rt.host.register("saf.cancelImport") { args ->
+            runCatching {
+                val token = JSONObject(args).optString("token")
+                SafImport.cancel(token).toString()
+            }.getOrElse {
+                JSONObject().put("ok", false).put("error", it.message ?: "saf.cancelImport failed").toString()
+            }
+        }
+
+        rt.host.register("openAppInfo") {
+            // 深链到本应用信息页（203 权限归位；Android 无目录级 ACL，用户只能 here 管理）
+            runCatching {
+                val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.fromParts("package", App.appContext.packageName, null))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                App.appContext.startActivity(intent)
+                JSONObject().put("ok", true)
+            }.getOrElse {
+                JSONObject().put("ok", false).put("error", it.message ?: "openAppInfo failed")
+            }.toString()
         }
     }
 }

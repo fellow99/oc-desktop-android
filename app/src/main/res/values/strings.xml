@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OC Desktop Android</string>
+
+    <!-- 关于页（107 G6 非官方声明 + G3 第三方许可指引；P1-4 品牌化） -->
+    <string name="about_title">关于 OC Desktop Android</string>
+    <string name="about_menu">关于</string>
+    <string name="about_body">OC Desktop Android %1$s
+\n本应用与 opencode 团队无隶属关系：opencode 为 MIT 开源项目，本应用是其桌面形态在 Android 上的第三方移植（非官方）。
+\n随包分发的 Node.js、opencode、isomorphic-git、js-diff 及桥/引擎组件适用其上游许可（MIT 等），全文见随包 THIRD-PARTY-NOTICES。
+\n会话、凭据与工作区数据全部保存在本机应用沙箱内。</string>
 </resources>

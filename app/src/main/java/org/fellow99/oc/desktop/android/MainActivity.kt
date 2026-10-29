@@ -47,9 +47,18 @@ class MainActivity : Activity() {
 
     private var firstPageDone = false
 
+    companion object {
+        @Volatile
+        private var instance: MainActivity? = null
+
+        /** 桥线程安全获取当前实例（saf.pickFolder 从 Node 侧调来）。 */
+        fun instanceOrNull(): MainActivity? = instance
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        instance = this
         runtime = OpencodeRuntime(this)
 
         setContentView(buildViews())
@@ -67,9 +76,30 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        if (instance === this) instance = null
         scope.cancel()
         webView.destroy()
         super.onDestroy()
+    }
+
+    /** 启动系统 SAF 目录选择器（SafImport 调用；结果在 onActivityResult 回传）。 */
+    fun launchTreePicker(requestCode: Int): Boolean = runCatching {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION),
+            requestCode,
+        )
+        true
+    }.getOrDefault(false)
+
+    @Deprecated("Deprecated in Java")
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == SafImport.REQUEST_CODE) {
+            val treeUri = data?.data
+            SafImport.onPickerResult(this, resultCode, treeUri)
+        }
     }
 
     @Deprecated("Deprecated in Java")
@@ -84,11 +114,23 @@ class MainActivity : Activity() {
                 .setTitle("退出")
                 .setMessage("退出 OC Desktop Android？（进程内 Node 随应用结束，会话数据已落盘）")
                 .setPositiveButton("退出") { _, _ -> finishAndRemoveTask() }
+                .setNeutralButton("关于", { _, _ -> showAbout() })
                 .setNegativeButton("取消", null)
                 .show()
             return
         }
         super.onBackPressed()
+    }
+
+    /** 关于页（107 G6/G3）：非官方声明 + 第三方许可指引（P1-4）。 */
+    private fun showAbout() {
+        val pm = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
+        val version = pm?.versionName ?: "?"
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.about_title))
+            .setMessage(getString(R.string.about_body, version))
+            .setPositiveButton("关闭", null)
+            .show()
     }
 
     // ── 视图 ─────────────────────────────────────────────────────────────────
@@ -108,6 +150,10 @@ class MainActivity : Activity() {
         }
         loading.addView(ProgressBar(this))
         loading.addView(phaseText)
+        loading.addView(Button(this).apply {
+            text = getString(R.string.about_menu)
+            setOnClickListener { showAbout() }
+        })
         loadingView = loading
         root.addView(loading, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
 
