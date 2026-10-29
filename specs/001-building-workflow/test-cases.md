@@ -13,7 +13,7 @@
 | T-C6 | 签名材料零入库 | R6 | `git status --porcelain` + `git check-ignore` | `keystore.properties`、`*.keystore` 均被 ignore，git 追踪集中无新敏感文件 | ✅ |
 | T-C7 | APK 构建步等价（本机） | R4 | `./gradlew :app:assembleDebug`（本机后台执行） | `app/build/outputs/apk/debug/app-debug.apk` 产出，BUILD SUCCESSFUL | ✅ |
 | T-C8 | 基线守卫等价（本机） | R3 | `node scripts/collect-opencode.mjs --check`（`OPENCODE_DIR` 指向上游） | 退出码 0，基线核录一致 | ✅（注意盲区：`--check` 在 verify-runtime 之前退出，冷缓存路径由 T-C11 覆盖） |
-| T-C9 | tag 触发端到端（CI 真跑） | R1/R2/R4/R5 | `workflow_dispatch` 真跑彩排（debug 版）→ run 40867423494 | 16 业务 step 全绿；assembleDebug BUILD SUCCESSFUL；产物 APK+`.sha256`；Release 步按设计 skipped | ✅ 2026-10-29（正式 `v0.12.1` tag 发布待用户推送） |
+| T-C9 | tag 触发端到端（CI 真跑） | R1/R2/R4/R5 | `workflow_dispatch` 真跑彩排（debug 版）→ run 40867423494 | 16 业务 step 全绿；assembleDebug BUILD SUCCESSFUL；产物 APK+`.sha256`；Release 步按设计 skipped | ✅✅ 2026-10-29 正式发布：tag run 40875919607 全绿，assembleRelease 签名包 122,881,213 B 已挂 Release |
 | T-C10 | 失败可观测 | R8 | 审查 step 划分 + artifact step | 五步/构建/发布独立命名；`dist/` 无论发布与否均上传 artifact | ✅ |
 | T-C11 | 引擎 AAR 门禁冷缓存等价（评审后增补） | R2/R7 | 从 Central 下载 `node-runtime-24.22.1.aar` → `OC_NODE_RUNTIME_AAR=<路径> node scripts/verify-runtime.mjs` | 门禁全绿（AAR 与 lock 的 libnode.so/libc++_shared.so SHA-256 一致）；workflow 含 AAR 预取步注入该 env | ✅（本机实测 Central AAR 全绿；workflow 断言 FIX-C1a–c） |
 | T-C12 | 产物文件名对齐 AGP 实际输出（评审后增补） | R4/R5 | 断言收集产物 step 使用 `app-${VARIANT,,}.apk`（全小写，对齐 T-C7 实测产物名） | 断言 FIX-C2 PASS | ✅ |

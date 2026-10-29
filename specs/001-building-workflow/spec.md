@@ -1,6 +1,6 @@
 # 001-building-workflow —— GitHub Actions 构建发布流程（spec）
 
-> 状态：✅ as-built（2026-10-29；CI 真跑彩排 debug 版全绿 run 40867423494，正式 `v0.12.1` tag 发布待用户推送）· 引用：规划 §5.2/§7.1/§14.3、102-payload-pipeline（载荷流水线契约）、宪法 C3/C4
+> 状态：✅ as-built（2026-10-29；CI 真跑彩排 debug 版全绿 run 40867423494，正式 v0.12.1 已发布：run 40875919607 全绿，Release 挂签名 APK+sha256）· 引用：规划 §5.2/§7.1/§14.3、102-payload-pipeline（载荷流水线契约）、宪法 C3/C4
 > 需求模块落位：`oc-desktop-android/specs/`（按需求约定，不入父工程 specs）
 
 ## 1. 目标
