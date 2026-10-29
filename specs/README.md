@@ -36,13 +36,14 @@
 | 103 WebView 渲染壳 | [103-webview-shell/](./103-webview-shell/) | [spec.md](./103-webview-shell/spec.md) | ✅ as-built |
 | 104 宿主能力 | [104-host-capabilities/](./104-host-capabilities/) | [spec.md](./104-host-capabilities/spec.md) | ✅ as-built |
 | 105 鉴权 | [105-auth/](./105-auth/) | [spec.md](./105-auth/spec.md) | ✅ as-built |
-| 106 上游适配（补丁） | [106-upstream-adaptation/](./106-upstream-adaptation/) | [spec.md](./106-upstream-adaptation/spec.md) | ⬜ planned |
-| 107 合规 | [107-compliance/](./107-compliance/) | [spec.md](./107-compliance/spec.md) | ⬜ planned |
-| 108 Git 插件 | [108-git-plugin/](./108-git-plugin/) | [spec.md](./108-git-plugin/spec.md) | ⬜ planned |
+| 106 上游适配（补丁） | [106-upstream-adaptation/](./106-upstream-adaptation/) | [spec.md](./106-upstream-adaptation/spec.md) | ✅ as-built |
+| 107 合规 | [107-compliance/](./107-compliance/) | [spec.md](./107-compliance/spec.md) | 🔶 部分（G3/G4/G6） |
+| 108 Git 插件 | [108-git-plugin/](./108-git-plugin/) | [spec.md](./108-git-plugin/spec.md) | 🔶 as-built（host） |
 | 109 回归基线 | [109-regression/](./109-regression/) | [spec.md](./109-regression/spec.md) | ⬜ planned |
 | 110 jitless 诊断形态 | [110-jitless/](./110-jitless/) | [spec.md](./110-jitless/spec.md) | ⬜ planned |
 | 111 基线迁移（v2.1.2） | [111-version-2.1.2/](./111-version-2.1.2/) | [spec.md](./111-version-2.1.2/spec.md) | ⬜ planned |
-| 203 工作区选择器 | [203-workspace-picker/](./203-workspace-picker/) | [spec.md](./203-workspace-picker/spec.md) | ⬜ planned |
+| 112 JS 搜索兜底（本工程新增） | [112-js-search/](./112-js-search/) | [spec.md](./112-js-search/spec.md) | 🔶 as-built（host） |
+| 203 工作区选择器 | [203-workspace-picker/](./203-workspace-picker/) | [spec.md](./203-workspace-picker/spec.md) | 🔶 as-built（host） |
 | 205 pnpm 插件（本工程新增） | [205-pnpm-plugin/](./205-pnpm-plugin/) | [spec.md](./205-pnpm-plugin/spec.md) | ⬜ planned |
 
 ## 四、写作纪律

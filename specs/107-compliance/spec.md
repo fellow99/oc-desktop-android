@@ -12,10 +12,10 @@
 |---|---|---|---|
 | G1 | 无动态下发可执行代码 | 运行期只解包 JS 载荷；不 dlopen 可写目录 `.so` | ✅（设计即合规，发版前复核） |
 | G2 | 16KB 页对齐 | 引擎构建期保证 + lock 门禁 | ✅ lock 24.22.1 合格 |
-| G3 | 第三方许可清单 | `THIRD-PARTY-NOTICES`（Node.js/opencode/pnpm/isomorphic-git/引导件）随包 | ⬜ |
-| G4 | 供应链可追溯 | runtime.lock + 载荷 SHA-256 清单随包 | ✅ 部分（lock 引用 + manifest；随包分发待做） |
-| G5 | 数据与隐私 | 会话/密钥/工作区全本地；外呼仅模型请求；隐私政策声明 | ⬜ |
-| G6 | 非官方声明 | README + 关于页（非 opencode 官方，MIT 第三方移植） | ⬜（README 已含，关于页待做） |
+| G3 | 第三方许可清单 | `THIRD-PARTY-NOTICES`（Node.js/opencode/pnpm/isomorphic-git/引导件）随包 | ✅（2026-10-29：assets/THIRD-PARTY-NOTICES.md + 关于页指引；pnpm 条目随 205 落地补） |
+| G4 | 供应链可追溯 | runtime.lock + 载荷 SHA-256 清单随包 | ✅（2026-10-29：verify-runtime.mjs 门禁 + manifest.tarSha256/plugins digest） |
+| G5 | 数据与隐私 | 会话/密钥/工作区全本地；外呼仅模型请求；隐私政策声明 | 🔶（本地事实成立；政策声明随发版轮） |
+| G6 | 非官方声明 | README + 关于页（非 opencode 官方，MIT 第三方移植） | ✅（2026-10-29：关于页 AlertDialog + strings + verify-branding 断言） |
 | G7 | targetSdk 政策 | targetSdk 36 达标；前台服务用途声明（若启用） | ✅（36） |
 | G8 | 分发 | 侧载 APK 主线安装文档；Play AAB+PAD 评估 | ⬜ |
 | G9 | PoC 清理 | 探针 Activity/诊断端点/`--inspect`/`--jitless` 不进发布包 | ✅（本迭代 debug probe 源集已删除） |

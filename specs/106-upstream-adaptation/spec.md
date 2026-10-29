@@ -1,6 +1,6 @@
 # 106-upstream-adaptation —— 上游适配/幂等补丁（spec）
 
-> 状态：⬜ planned（按需引入）· 引用：规划 §5.10/§9 · 对标：ark `patches/v2.1.2/` 五件套同名移植
+> 状态：✅ as-built（2026-10-29，host 全链路验证）· 引用：规划 §5.10/§9 · 对标：ark `patches/v2.1.2/` 五件套同名移植
 
 ## 1. 目标
 
@@ -17,10 +17,17 @@
 | R5 | `0008-git-credentials-settings` | 设置→Git 凭据页 | 108 落地时 |
 | R6 | 流水线接线 | `scripts/apply-patches.mjs`（基线守卫+reverse-check）接入 102 构建链；「共用 submodule 串行」纪律 | 首个补丁引入时 |
 
-## 3. as-built 现状
+## 3. as-built 现状（2026-10-29）
 
-v2.1.2 stock bundle（零补丁）已在 Android 完成 serve + 对话 + 看图 + shell 工具全链路（20261028-02）⇒ 本模块**暂无激活补丁**，仅保留规格与引入条件；stock 事实记录于 ARCHITECTURE §5。
+- `patches/v2.1.2/`：ark 五件套原样移植（0001/0003/0006/0007/0008，逐字节一致）+ Android 专属
+  `0009-workspace-import-actions.patch`（203 R1 的 UI 导入/删除动作，自门控）与
+  `0010-branding-oc-desktop.patch`（index.html title → OC Desktop）。
+- `scripts/apply-patches.mjs`：基线守卫（HEAD=a517687fde）+ 工作树守卫 + 逐条 reverse-check 幂等；
+  `--reset --yes` 需显式。共用 submodule 串行纪律随脚本固化。
+- 验证：`apply-patches.mjs --reset --yes` → `已应用 7 / 失败 0`；bundle 重建后 smoke 全绿
+  （logs/20261029-1/TEST_REPORT.md #1/#6）。
 
 ## 4. 判据汇总
 
 补丁应用后：`git apply --reverse --check` 通过；正反向往返 SHA-256 还原；smoke 全绿；不落入既有补丁上下文区间。
+（2026-10-29：脚本内建 ③④ 两步 reverse 校验，往返还原由幂等判据承载；smoke 全绿 ✅。）

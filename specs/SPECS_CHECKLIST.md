@@ -30,13 +30,14 @@
 | M-103 | WebView 渲染壳 | [spec](./103-webview-shell/spec.md) | ✅ Done（as-built） | MainActivity + P0-D/E |
 | M-104 | 宿主能力桥 | [spec](./104-host-capabilities/spec.md) | ✅ Done（as-built，SAF/notify 为 stub） | HostCapabilities + 探针 echo |
 | M-105 | 鉴权（密码/auth_token/凭据） | [spec](./105-auth/spec.md) | ✅ Done（as-built） | ConnectionStore + e2e 对话 |
-| M-106 | 上游适配（五补丁） | [spec](./106-upstream-adaptation/spec.md) | ⬜ Pending | 规划 §5.10；stock bundle 暂免补丁 |
-| M-107 | 合规（§13 清单） | [spec](./107-compliance/spec.md) | ⬜ Pending | 规划 §13 |
-| M-108 | Git 插件（isomorphic-git） | [spec](./108-git-plugin/spec.md) | ⬜ Pending | 对标 ark 108 |
+| M-106 | 上游适配（五补丁） | [spec](./106-upstream-adaptation/spec.md) | ✅ Done（as-built 20261029） | 7 补丁幂等应用 + smoke 全绿 |
+| M-107 | 合规（§13 清单） | [spec](./107-compliance/spec.md) | 🔶 In Progress | G3/G4/G6 ✅（20261029）；G5/G8/G10 待发版轮 |
+| M-108 | Git 插件（isomorphic-git） | [spec](./108-git-plugin/spec.md) | 🔶 Done（host 20261029） | verify-git-plugin 全过；0600/真机随 P0-N 轮 |
 | M-109 | 回归基线（四件套） | [spec](./109-regression/spec.md) | ⬜ Pending | 规划 Phase 4 |
 | M-110 | jitless 诊断形态 | [spec](./110-jitless/spec.md) | ⬜ Pending | ark 同名；Android 裁剪说明 |
 | M-111 | 基线迁移 v2.1.2 | [spec](./111-version-2.1.2/spec.md) | ⬜ Pending | 对标 ark 111 |
-| M-203 | 工作区选择器（SAF 导入制） | [spec](./203-workspace-picker/spec.md) | ⬜ Pending | D14；当前默认工作区已可用 |
+| M-112 | JS 搜索兜底（grep/glob） | [spec](./112-js-search/spec.md) | 🔶 Done（host 20261029） | oc-plugin-search；夹具用例全过 |
+| M-203 | 工作区选择器（SAF 导入制） | [spec](./203-workspace-picker/spec.md) | 🔶 Done（host 20261029） | 0007/0009 + 插件 RPC 实弹；SAF 实机随真机轮 |
 | M-205 | pnpm 插件（本工程新增） | [spec](./205-pnpm-plugin/spec.md) | ⬜ Pending | D13 全量档位 |
 
 ## 三、需求覆盖对照（本迭代 `000-scaffold`）
