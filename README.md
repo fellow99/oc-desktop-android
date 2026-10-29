@@ -39,6 +39,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n org.fellow99.oc.OCDesktopAndroid/.MainActivity
 ```
 
+> **CI**：推送 `v*` tag（如 `v0.12.1`）自动执行以上①②并发布 GitHub Release（[.github/workflows/build-release.yml](.github/workflows/build-release.yml)；规格见 [`specs/001-building-workflow/`](specs/001-building-workflow/spec.md)。签名 secrets 可选：不配则出 debug 签名包）。
+
 ## 装机前必须知道
 
 | # | 事项 |
