@@ -62,3 +62,17 @@
 | 引擎双包 Central 解析（CI 无 mavenLocal 依赖） | ✅ | node-bridge 0.2.0 / node-runtime 24.22.1 Central 实证（2026-10-27） |
 | 本机等价验证（基线守卫 + assembleDebug + 21 项 workflow 断言） | ✅ | [logs/20261029-2/TEST_REPORT.md](../logs/20261029-2/TEST_REPORT.md) |
 | 真实 tag 端到端（push v0.12.1） | ✅ 全链路完成 | 彩排（40867423494）+ 正式 tag v0.12.1（40875919607）均全绿；Release 已发布（签名 APK + sha256） |
+
+
+## 四、需求覆盖对照（20261029-2 轮：Phase2 收尾 + Phase3 + Phase4）
+
+| 需求项 | 状态 | 落点 |
+|---|---|---|
+| P1 扫尾（M9/M10/0009v2） | ✅ | auth.test 三例 / search 元数据 / 0009 hunk v2 |
+| 205 pnpm（P0-M 冻结 + 五工具） | ✅ host | plugins/oc-plugin-pnpm + logs/20261029-2/P0M-PROBE.md |
+| D15 保活 + notify 真实现 | ✅ 编译级 | KeepaliveService + keepalive.set/get（设备面随模拟器恢复） |
+| 107 G5/G10 收口 | ✅ | 关于页隐私段 + 口径核录 |
+| 109 回归四件套 | ✅ host | scripts/regression.mjs + logs/20261029-2/REGRESSION.md |
+| 111 走查 | ✅（基线未变，无需迁移） | logs/20261029-2/PHASE4.md |
+| 出口闭环（pnpm→修 bug→git commit） | ✅ host 等价 | docs/evidence/20261029-02/（模拟器 qemu 事件转登记） |
+| 模拟器环境事件 | ⬜ 恢复待 | logs/20261029-2/ENVIRONMENT.md |
