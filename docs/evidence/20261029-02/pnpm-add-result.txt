@@ -1,0 +1,1 @@
+{"installed":true,"text":"done\n\n补充说明一下：`pnpm_add` 调用返回了类似 `[object Object]` 的输出，并且第一次调用后 `package.json` 里仍写着 `ms: 4.1.0`，依赖并没有真正落盘。我随后用 pnpm 命令重新添加了一次，现在已确认：\n\n- `package.json` 的依赖为 `\"ms\": \"2.1.3\"`\n- `node_modules/ms/package.json` 版本为 `2.1.3`\n\n（仓库里新增了未跟踪的 `package.json` 和 `README.md`，未提交。）"}

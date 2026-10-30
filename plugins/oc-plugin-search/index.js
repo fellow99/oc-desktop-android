@@ -63,7 +63,8 @@ export function matchGlob(re, relPath) {
 function fenceResolve(root, inputPath) {
   const target = path.resolve(root, inputPath && String(inputPath).length > 0 ? String(inputPath) : '')
   const rel = path.relative(root, target)
-  if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return null
+  if (rel === '') return target // target 即 root 本身：合法（默认全工作区；闭环轮实测修复点）
+  if (rel.startsWith('..') || path.isAbsolute(rel)) return null
   // symlink 收口（评审 M5）：base 本身是沙箱内符号链接时拒绝穿透到根外
   try {
     const real = fs.realpathSync(target)
@@ -182,7 +183,12 @@ export default {
       options: { codemode: false },
       execute: async (input) => {
         const base = fenceResolve(root, input?.path)
-        if (!base) return { content: 'path 越界（必须在工作区内）', metadata: { ok: false, code: 'out-of-root' } }
+        if (!base) {
+          return {
+            content: `path 越界诊断：root=${root} inputPath=${JSON.stringify(input?.path ?? '')} rootExists=${fs.existsSync(root)}`,
+            metadata: { ok: false, code: 'out-of-root' },
+          }
+        }
         let regex
         try {
           regex = new RegExp(String(input.pattern), input?.ignoreCase === true ? 'i' : '')
