@@ -11,7 +11,7 @@
 
 ## 执行记录
 （按时间追加命令/结果/产物路径）
-# 113-version-2.2.5 开发执行日志（android）
+# 101-version-2.2.5 开发执行日志（android）
 
 ## 构建结果（2026-10-31）
 - 版本：versionName 2.2.5 / versionCode 20205；守卫基线 9bbb8ce18c / patches/v2.2.5；node-runtime AAR 24.22.1（不变）。

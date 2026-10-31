@@ -1,10 +1,10 @@
-# 113 — 版本更新：2.2.5 任务清单（android）
+# 101 — 版本更新：2.2.5 任务清单（android）
 
 > **回引:** `spec.md` / `plan.md` ｜ **最后更新:** 2026-10-31 ｜ 日志：`logs/20261031-1/`
 
 ## M1 静态收敛
 
-- **T01** 建 `specs/113-version-2.2.5/` 四件套 + `logs/20261031-1/DEV_CHECKLIST.md`
+- **T01** 建 `specs/101-version-2.2.5/` 四件套 + `logs/20261031-1/DEV_CHECKLIST.md`
 - **T02** 按 plan §3 清理；`git status` 无 ` D `
 - **T03** `app/build.gradle.kts` → 2.2.5/20205（含注释版本口径）；README 同步；
   apply-patches/collect-opencode 守卫（9bbb8ce18c、v2.2.5、VERSION 2.2.5）；smoke 工具名口径；bun 1.4.4

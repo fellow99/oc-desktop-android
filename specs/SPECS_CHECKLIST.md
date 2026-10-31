@@ -35,7 +35,8 @@
 | M-108 | Git 插件（isomorphic-git） | [spec](./108-git-plugin/spec.md) | 🔶 Done（host 20261029） | verify-git-plugin 全过；0600/真机随 P0-N 轮 |
 | M-109 | 回归基线（四件套） | [spec](./109-regression/spec.md) + [as-built](./109-regression/as-built.md) | 🔶 Done（host 20261029-2） | scripts/regression.mjs；首启/设备重测待 |
 | M-110 | jitless 诊断形态 | [spec](./110-jitless/spec.md) | ⬜ Pending | ark 同名；Android 裁剪说明 |
-| M-111 | 基线迁移 v2.1.2 | [spec](./111-version-2.1.2/spec.md) | ⬜ Pending | 对标 ark 111 |
+| R-101 | 版本更新 v2.1.2（模块名统一 101-version-*） | [spec](./101-version-2.1.2/spec.md) | ✅ Done | 由原 111-version 更名；对标 hos/ark |
+| R-101 | 版本更新 v2.2.5（模块名统一 101-version-*） | [spec](./101-version-2.2.5/spec.md) | ✅ Done（2026-10-31 真机） | 由原 113-version 更名；含 0011 返回/选图/重连修复 |
 | M-112 | JS 搜索兜底（grep/glob） | [spec](./112-js-search/spec.md) | 🔶 Done（host 20261029） | oc-plugin-search；夹具用例全过 |
 | M-203 | 工作区选择器（SAF 导入制） | [spec](./203-workspace-picker/spec.md) | 🔶 Done（host 20261029） | 0007/0009 + 插件 RPC 实弹；SAF 实机随真机轮 |
 | M-205 | pnpm 插件（本工程新增） | [spec](./205-pnpm-plugin/spec.md) + [as-built](./205-pnpm-plugin/as-built.md) | 🔶 Done（host 20261029-2） | 五工具（run 平台证伪降级）；P0-M 冻结 |

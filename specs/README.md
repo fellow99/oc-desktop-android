@@ -5,9 +5,9 @@
 
 ## 一、这是什么工程
 
-**OC Desktop Android**（`org.fellow99.oc.OCDesktopAndroid`，v2.1.2/20102）：opencode 桌面端的 **Android 版**。
+**OC Desktop Android**（`org.fellow99.oc.OCDesktopAndroid`，v2.2.5/versionCode 20205；前一版 v2.1.2/20102）：opencode 桌面端的 **Android 版**。
 
-- **进程内 Node**（`io.github.fellow99:node-bridge:0.2.0` + `node-runtime:24.22.1`，Maven 双包）承载 **opencode v2.1.2 stock CLI bundle** 的 `serve` 服务；
+- **进程内 Node**（`io.github.fellow99:node-bridge:0.2.0` + `node-runtime:24.22.1`，Maven 双包）承载 **opencode v2.2.5**（基线 `9bbb8ce18c`；前一版 v2.1.2）stock CLI bundle 的 `serve` 服务；
 - **系统 WebView** 同源加载本机服务内嵌的 v2 Web UI —— 零 CORS、零 JS 注入桥、零内嵌浏览器内核、无 Electron；
 - 对标兄弟工程 [`oc-desktop-ark`](../oc-desktop-ark)（鸿蒙 ArkUI 版）的同构形态；特色能力：isomorphic-git 插件 + **进程内 pnpm**（ark 无）。
 
@@ -41,7 +41,8 @@
 | 108 Git 插件 | [108-git-plugin/](./108-git-plugin/) | [spec.md](./108-git-plugin/spec.md) | 🔶 as-built（host） |
 | 109 回归基线 | [109-regression/](./109-regression/) | [spec.md](./109-regression/spec.md) | ⬜ planned |
 | 110 jitless 诊断形态 | [110-jitless/](./110-jitless/) | [spec.md](./110-jitless/spec.md) | ⬜ planned |
-| 111 基线迁移（v2.1.2） | [111-version-2.1.2/](./111-version-2.1.2/) | [spec.md](./111-version-2.1.2/spec.md) | ⬜ planned |
+| **101 版本更新 v2.1.2** | [101-version-2.1.2/](./101-version-2.1.2/) | [spec.md](./101-version-2.1.2/spec.md) | ✅ done（2026-10） |
+| **101 版本更新 v2.2.5** | [101-version-2.2.5/](./101-version-2.2.5/) | [spec.md](./101-version-2.2.5/spec.md) | ✅ done（2026-10-31，真机验证） |
 | 112 JS 搜索兜底（本工程新增） | [112-js-search/](./112-js-search/) | [spec.md](./112-js-search/spec.md) | 🔶 as-built（host） |
 | 203 工作区选择器 | [203-workspace-picker/](./203-workspace-picker/) | [spec.md](./203-workspace-picker/spec.md) | 🔶 as-built（host） |
 | 205 pnpm 插件（本工程新增） | [205-pnpm-plugin/](./205-pnpm-plugin/) | [spec.md](./205-pnpm-plugin/spec.md) | ⬜ planned |

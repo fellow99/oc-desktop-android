@@ -35,7 +35,7 @@
 | [108 Git 插件](./108-git-plugin/spec.md) | isomorphic-git 工具面 + VCS 覆盖 + 凭据页 | ⬜ |
 | [109 回归基线](./109-regression/spec.md) | 四件套复跑 | ⬜ |
 | [110 jitless](./110-jitless/spec.md) | 诊断形态（不进产品） | ⬜ |
-| [111 基线迁移](./111-version-2.1.2/spec.md) | 上游升级核对单 | ⬜ |
+| [101 版本更新 v2.1.2](./101-version-2.1.2/spec.md) | 上游升级核对单 | ⬜ |
 | [203 工作区选择器](./203-workspace-picker/spec.md) | 多工作区 + SAF 导入制 | ⬜ |
 | [205 pnpm 插件](./205-pnpm-plugin/spec.md) | 进程内 pnpm 全量工具面 | ⬜ |
 
