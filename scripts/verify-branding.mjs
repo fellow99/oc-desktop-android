@@ -3,7 +3,7 @@
  * verify-branding.mjs —— 品牌化断言守卫（P1-4 / E5；对标 hos 103-branding 的漂移守卫思路）。
  *
  * 断言（任一失败 ⇒ 退出码 1）：
- *   ① strings.xml app_name = 「OC Desktop Android」；
+ *   ① strings.xml app_name = 「OC Desktop」（对标 hos/ark；Android Edition 仅作版别后缀，不进显示名）；
  *   ② AndroidManifest 声明 icon/roundIcon（自适应图标物料在位）；
  *   ③ assets/THIRD-PARTY-NOTICES.md 存在且含 opencode/MIT（G3）；
  *   ④ 关于页字符串含非官方声明（G6）；
@@ -19,8 +19,11 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const problems = []
 
 const strings = readFileSync(path.join(root, 'app/src/main/res/values/strings.xml'), 'utf8')
-if (!/<string name="app_name">OC Desktop Android<\/string>/.test(strings)) {
-  problems.push('strings.xml app_name ≠ 「OC Desktop Android」')
+if (!/<string name="app_name">OC Desktop<\/string>/.test(strings)) {
+  problems.push('strings.xml app_name ≠ 「OC Desktop」')
+}
+if (strings.includes('<string name="app_name">OC Desktop Android</string>')) {
+  problems.push('app_name 仍带版别后缀 Android（显示名应与 hos/ark 统一为 OC Desktop）')
 }
 if (!strings.includes('非官方') || !strings.includes('THIRD-PARTY-NOTICES')) {
   problems.push('关于页字符串缺非官方声明或许可指引（G6/G3）')
@@ -28,7 +31,6 @@ if (!strings.includes('非官方') || !strings.includes('THIRD-PARTY-NOTICES')) 
 
 const manifest = readFileSync(path.join(root, 'app/src/main/AndroidManifest.xml'), 'utf8')
 if (!manifest.includes('android:icon="@mipmap/ic_launcher"')) problems.push('Manifest 未声明 android:icon')
-if (!manifest.includes('android:roundIcon="@mipmap/ic_launcher_round"')) problems.push('Manifest 未声明 android:roundIcon')
 
 const notices = path.join(root, 'app/src/main/assets/THIRD-PARTY-NOTICES.md')
 if (!existsSync(notices)) {
@@ -38,6 +40,25 @@ if (!existsSync(notices)) {
   if (!text.includes('opencode')) problems.push('THIRD-PARTY-NOTICES 未收录 opencode')
   if (!text.includes('MIT')) problems.push('THIRD-PARTY-NOTICES 未标注 MIT 许可')
   if (!text.includes('非官方')) problems.push('THIRD-PARTY-NOTICES 缺非官方声明')
+}
+
+/* 品牌图标物料在位（make-brand-materials.mjs 产物：五密度透明 ic_launcher.png） */
+const resDir = path.join(root, 'app/src/main/res')
+const EXPECTED_ICON_SIZES = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 }
+for (const [density, size] of Object.entries(EXPECTED_ICON_SIZES)) {
+  const file = path.join(resDir, `mipmap-${density}`, 'ic_launcher.png')
+  if (!existsSync(file)) {
+    problems.push(`品牌图标缺失：mipmap-${density}/ic_launcher.png`)
+    continue
+  }
+  // 透明 PNG 且尺寸正确（父工程 logo.png 同款透明图，非白方块）
+  const png = readFileSync(file)
+  if (png.readUInt32BE(16) !== size || png.readUInt32BE(20) !== size) {
+    problems.push(`mipmap-${density}/ic_launcher.png 尺寸应为 ${size}×${size}`)
+  }
+}
+if (existsSync(path.join(resDir, 'mipmap-anydpi-v26'))) {
+  problems.push('品牌决策为直接使用父工程透明 logo，不应存在 mipmap-anydpi-v26 adaptive 资源')
 }
 
 /* res/ 下应用面资源不得出现 OpenCode 指称（上游包名/代码不在范围） */

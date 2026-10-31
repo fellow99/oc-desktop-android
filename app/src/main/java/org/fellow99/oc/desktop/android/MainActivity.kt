@@ -113,7 +113,7 @@ class MainActivity : Activity() {
         if (webView.visibility == View.VISIBLE) {
             AlertDialog.Builder(this)
                 .setTitle("退出")
-                .setMessage("退出 OC Desktop Android？（进程内 Node 随应用结束，会话数据已落盘）")
+                .setMessage("退出 OC Desktop？（进程内 Node 随应用结束，会话数据已落盘）")
                 .setPositiveButton("退出") { _, _ -> finishAndRemoveTask() }
                 .setNeutralButton("关于", { _, _ -> showAbout() })
                 .setNegativeButton("取消", null)
@@ -213,7 +213,7 @@ class MainActivity : Activity() {
         if (firstPageDone || webView.visibility == View.VISIBLE) return
         loadingView.visibility = View.VISIBLE
         errorView.visibility = View.GONE
-        phaseText.text = "OC Desktop Android\n\n$text"
+        phaseText.text = "OC Desktop\n\n$text"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
