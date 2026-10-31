@@ -1,6 +1,7 @@
 # 104-host-capabilities —— 宿主能力桥（spec）
 
 > 状态：✅ as-built（2026-10-28；notify/saf 为如实 stub）· 引用：规划 §6、宪法 C1/C2 · 实现：`HostCapabilities.kt`
+> 需求编号：能力表各行等价 FR-104-001..005（历史局部编号；新写模块统一 FR-<模块>-NNN）
 
 ## 1. 目标
 

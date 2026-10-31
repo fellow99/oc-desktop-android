@@ -1,4 +1,4 @@
-# 108-git-plugin 技术方案（as-built）
+# 204-plugin-git 技术方案（as-built）
 
 ## 1. 结构（移植自 ark，3 处适配）
 - `plugins/oc-plugin-git/`：index.js（工具注册+VCS 覆盖+凭据 RPC）+ lib/*（repo/fence/auth/credentials/diff/report/runtime/tools×21）

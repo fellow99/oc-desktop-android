@@ -36,7 +36,7 @@
   "url": "http://127.0.0.1:37591",
   "pid": 25934,
   "startedAt": 1793122366595,
-  "version": "2.1.2"
+  "version": "2.2.5"
 }
 ```
 
@@ -45,7 +45,7 @@
 ```json
 {
   "schema": 1,
-  "version": "2.1.2",                              // = OC_VERSION；版本变化触发重解包
+  "version": "2.2.5",                              // = OC_VERSION；版本变化触发重解包
   "tarSha256": "2fd7f578…c87",                     // 源包内容指纹
   "files": 72, "bytes": 69621011,
   "unpackedAt": "2026-10-27T17:32:51.431Z"
@@ -65,7 +65,7 @@
 ### 2.5 构建期 `opencode-dist.manifest.json`（host 侧产物清单，随仓不入 APK）
 
 ```json
-{ "schema": 1, "version": "2.1.2", "baseline": "a517687fde", "tarSha256": "…",
+{ "schema": 1, "version": "2.2.5", "baseline": "9bbb8ce18c", "tarSha256": "…",
   "files": 41, "bytes": 69621011, "tarBytes": 69670400, "gzBytes": 37227818, "builtAt": "…" }
 ```
 

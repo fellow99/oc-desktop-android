@@ -12,7 +12,7 @@
 | S4 | 能看图 | 会话可附图片，多模态模型能描述图片内容 | 附截图提问，回复包含图中真实内容 | ✅ 实测 |
 | S5 | 能用工具 | 上游文件读写/编辑/搜索工具可用；`bash` 工具经 `/system/bin/sh` | 会话中工具调用可见且执行成功 | ✅ 实测（shell 工具在 e2e 中被模型自主调用并成功） |
 | S6 | 能选工作区 | 默认沙箱工作区为项目根；（203）SAF 导入/导出 | 服务端 cwd=沙箱工作区；`/api/provider.location` 同值 | ✅ 默认工作区实测 / ⬜ 203 |
-| S7 | 能用 Git | isomorphic-git 插件（108） | 规格见 [108-git-plugin](./108-git-plugin/spec.md) | ⬜ |
+| S7 | 能用 Git | isomorphic-git 插件（204） | 规格见 [204-plugin-git](./204-plugin-git/spec.md) | ⬜ |
 | S8 | 能用 pnpm | 进程内 pnpm 工具面（205） | 规格见 [205-pnpm-plugin](./205-pnpm-plugin/spec.md) | ⬜ |
 | S9 | 失败可见 | 任何一步失败在 UI 留下可截图文字（阶段+原因+日志尾+重启提示） | 制造失败（删载荷）→错误页呈现三要素 | ✅ 实测 |
 | S10 | 能分发 | 侧载 APK 可复现；Play AAB 评估（Phase 3） | assembleDebug/Release 产物可安装 | ✅ debug 实测 / ⬜ AAB |
@@ -32,12 +32,16 @@
 | [105 鉴权](./105-auth/spec.md) | 密码生命周期、auth_token 首屏、模型凭据边界 | ✅ as-built |
 | [106 上游适配](./106-upstream-adaptation/spec.md) | 幂等补丁五件套（按需引入） | ⬜ |
 | [107 合规](./107-compliance/spec.md) | §13 清单（许可/隐私/政策/PoC 清理） | ⬜ |
-| [108 Git 插件](./108-git-plugin/spec.md) | isomorphic-git 工具面 + VCS 覆盖 + 凭据页 | ⬜ |
+| [204 Git 插件](./204-plugin-git/spec.md) | isomorphic-git 工具面 + VCS 覆盖 + 凭据页 | ⬜ |
 | [109 回归基线](./109-regression/spec.md) | 四件套复跑 | ⬜ |
 | [110 jitless](./110-jitless/spec.md) | 诊断形态（不进产品） | ⬜ |
-| [101 版本更新 v2.1.2](./101-version-2.1.2/spec.md) | 上游升级核对单 | ⬜ |
-| [203 工作区选择器](./203-workspace-picker/spec.md) | 多工作区 + SAF 导入制 | ⬜ |
+| [011 版本更新 v2.1.2](./011-version-2.1.2/spec.md) | 上游升级核对单 | ⬜ |
+| [011 版本更新 v2.2.5](./011-version-2.2.5/spec.md) | 上游升级核对单 | ✅ 真机 |
+| [012 构建发布工作流](./012-building-workflow/spec.md) | GitHub Actions tag 构建 + Release | ✅ as-built |
+| [013 品牌化](./013-branding/spec.md) | 应用名/标题/图标/许可 | ✅ as-built |
+| [203 工作区选择器](./203-plugin-workspace-picker/spec.md) | 多工作区 + SAF 导入制 | ⬜ |
 | [205 pnpm 插件](./205-pnpm-plugin/spec.md) | 进程内 pnpm 全量工具面 | ⬜ |
+| [206 JS 搜索](./206-js-search/spec.md) | grep/glob 纯 JS 兜底 | 🔶 host |
 
 ## 4. 本迭代（000-scaffold）范围声明
 

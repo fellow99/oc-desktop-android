@@ -1,4 +1,4 @@
-# 112-js-search 技术方案（as-built）
+# 206-js-search 技术方案（as-built）
 
 ## 1. 结构（`plugins/oc-plugin-search/index.js`，单文件零依赖）
 - `globToRegExp`：**/*/?/[abc]/{a,b} 编译（纯字符串状态机，无依赖）；

@@ -39,7 +39,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n org.fellow99.oc.OCDesktopAndroid/.MainActivity
 ```
 
-> **CI**：推送 `v*` tag（如 `v0.12.1`）自动执行以上①②并发布 GitHub Release（[.github/workflows/build-release.yml](.github/workflows/build-release.yml)；规格见 [`specs/001-building-workflow/`](specs/001-building-workflow/spec.md)。签名 secrets 可选：不配则出 debug 签名包）。
+> **CI**：推送 `v*` tag（如 `v0.12.1`）自动执行以上①②并发布 GitHub Release（[.github/workflows/build-release.yml](.github/workflows/build-release.yml)；规格见 [`specs/012-building-workflow/`](specs/012-building-workflow/spec.md)。签名 secrets 可选：不配则出 debug 签名包）。
 
 ## 装机前必须知道
 
@@ -58,7 +58,7 @@ payload/      Node 侧启动脚本（opencode-server.js + unpack.js + lib/*）
 patches/      上游幂等补丁（对标 ark：0001/0003/0006/0007/0008）
 plugins/      壳插件（oc-plugin-git / oc-plugin-workspace-roots / oc-plugin-pnpm）
 scripts/      构建与门禁流水线（apply-patches / build / collect / smoke / verify）
-specs/        规格体系（对标 ark：101–111、203、205）
+specs/        规格体系（011–013 公共、101–110 基础、203–206 插件）
 docs/         工程规划（唯一权威）+ 真机验证记录 + 证据
 ```
 

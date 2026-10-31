@@ -1,10 +1,10 @@
-# 001-building-workflow —— 任务清单（tasks）
+# 012-building-workflow —— 任务清单（tasks）
 
 > 日期：2026-10-29 · 回引：[spec.md](./spec.md) / [plan.md](./plan.md)
 
 | # | 任务 | 产出 | 依赖 | 状态 |
 |---|---|---|---|---|
-| T1 | 规格四件套（spec/plan/tasks/test-cases） | `specs/001-building-workflow/` | — | ✅ |
+| T1 | 规格四件套（spec/plan/tasks/test-cases） | `specs/012-building-workflow/` | — | ✅ |
 | T2 | 编写 `.github/workflows/build-release.yml`（触发面/环境/载荷五步/签名分支/APK/产物/发布，plan §4 十一步） | workflow 文件 | T1 | ✅ |
 | T3 | workflow 语义校验：YAML 解析 + GitHub Actions 语义检查（actionlint 或等价） | 校验输出 | T2 | ✅ |
 | T4 | 本机等价验证①：`node scripts/collect-opencode.mjs --check`（基线守卫口径） | 退出码 0 | T2 | ✅ |

@@ -1,6 +1,7 @@
-# 203-workspace-picker —— 工作区选择器（spec）
+# 203-plugin-workspace-picker —— 工作区选择器（spec）
 
 > 状态：🔶 as-built（2026-10-29 host 侧全过；SAF 实机拷贝/进度随真机轮）· 引用：规划 §5.13 D14 / §14.2（203）· 对标：ark `203-plugin-workspace-picker` + 补丁 0007/0009
+> 需求编号：R1..R6 等价 FR-203-001..006（历史局部编号；新写模块统一 FR-<模块>-NNN）
 > as-built 现状：默认工作区 `<filesDir>/workspace/default` 已作为项目根运行（T-E5 ✅）
 
 ## 1. 目标

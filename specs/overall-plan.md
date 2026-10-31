@@ -1,11 +1,11 @@
 # overall-plan —— 整体技术方案（怎么做）
 
-> 更新：2026-10-28 · 技术具体；与 [ARCHITECTURE.md](./ARCHITECTURE.md) 互补（那里讲结构，这里讲机制与关键路径）。
+> 更新：2026-11-01 · 技术具体；与 [ARCHITECTURE.md](./ARCHITECTURE.md) 互补（那里讲结构，这里讲机制与关键路径）。
 
 ## 1. 构建链（host 侧）
 
 ```
-上游源码（../opencode @ Branch_v2.1.2 / a517687fde，零补丁）
+上游源码（../opencode @ Branch_v2.2.5 / 9bbb8ce18c；v2.2.5 补丁 8 条）
   └─ packages/cli/dist-node/            # opencode.mjs(17.4MB) + assets/(52MB, 含 app-archive.bin)
        └─ scripts/collect-opencode.mjs  # ①基线守卫(HEAD/版本) ②ustar 打包 ③gzip(level 6)
             ├─ app/src/main/assets/opencode-dist.tar.gz   (37.2MB, gitignore)

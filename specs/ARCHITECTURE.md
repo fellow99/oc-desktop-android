@@ -1,6 +1,6 @@
 # ARCHITECTURE —— 整体架构
 
-> 更新：2026-10-28 · 与规划 §4 同构；本文补齐 **as-built 实测差异**（标注 ⚡ 的条目为本工程实测新增/修正）。
+> 更新：2026-11-01 · 与规划 §4 同构；本文补齐 **as-built 实测差异**（标注 ⚡ 的条目为本工程实测新增/修正）。
 
 ## 1. 进程与模块总览
 
@@ -24,7 +24,7 @@
 │  │ Node：bootstrap.js →（NODE_BRIDGE_ENTRY）payload/opencode-server.js       │
 │  │   ① env 装配(D9) ② unpack.js 自解包(D7) ③ chdir workspace/default         │
 │  │   ④ stdout 嗅探→server.ready.json ⑤ argv=serve --port 0 ⑥ import bundle   │
-│  │ opencode v2.1.2：/（内嵌 UI）+ /api/* + /api/event(SSE) + /auth/*          │
+│  │ opencode v2.2.5：/（内嵌 UI）+ /api/* + /api/event(SSE) + /auth/*          │
 │  │ 数据：node:sqlite(WAL)→data/opencode/opencode.db；凭据→credential store    │
 │  └──────────┬───────────────────────────────────────────────────┘         │
 │             ▲ same-origin（零 CORS / 零头改写 / 零 IPC 载体）                │
@@ -59,7 +59,7 @@
 |---|---|---|
 | 应用宿主层 | 本工程 Kotlin | 不解释业务载荷、不实现会话/模型/工具语义、不新增注入桥 |
 | 引导件层 | `payload/*.js` | 不做业务；env 契约与 Kotlin 镜像（变量名单一定义） |
-| 上游层 | opencode v2.1.2 | 不修改（stock bundle；补丁面见 106，本迭代为零补丁） |
+| 上游层 | opencode v2.2.5 | 不修改（stock bundle；补丁面见 106，v2.2.5 为 8 条补丁） |
 | 运行时层 | node-bridge / node-runtime | 引用不复制（契约见桥仓文档 §5/§6） |
 
 ## 5. ⚡ as-built 实测修正（对规划 §4 的增量）

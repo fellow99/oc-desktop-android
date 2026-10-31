@@ -1,6 +1,6 @@
-# build-release.yml —— tag 触发的自动构建与发布（需求 001-building-workflow）
+# build-release.yml —— tag 触发的自动构建与发布（需求 012-building-workflow）
 #
-# 规格链：specs/001-building-workflow/{spec,plan}.md · 口径源：README 快速开始 / docs/000-工程规划.md §14.3
+# 规格链：specs/012-building-workflow/{spec,plan}.md · 口径源：README 快速开始 / docs/000-工程规划.md §14.3
 #
 # 触发：push v* tag（如 v0.12.1）→ 载荷五步门禁 + APK + GitHub Release
 #       workflow_dispatch 手动触发（仅构建验证，不发布）

@@ -1,6 +1,7 @@
 # 101-runtime-integration —— 运行时接入（spec）
 
 > 状态：✅ as-built（2026-10-28）· 引用：规划 §5.1/§4.2、宪法 C1/C2/C5 · 实现：`app/src/main/java/org/fellow99/oc/desktop/android/{App,OpencodeRuntime,App,Diagnostics}.kt`
+> 需求编号：R1..R8 等价 FR-101-001..008（历史局部编号；新写模块统一 FR-<模块>-NNN）
 
 ## 1. 目标
 

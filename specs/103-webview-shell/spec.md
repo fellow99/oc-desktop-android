@@ -1,6 +1,7 @@
 # 103-webview-shell —— WebView 渲染壳（spec）
 
 > 状态：✅ as-built（2026-10-28）· 引用：规划 §5.4/§6、宪法 C1/C2 · 实现：`MainActivity.kt`、`res/xml/network_security_config.xml`
+> 需求编号：R1..R8 等价 FR-103-001..008（历史局部编号；新写模块统一 FR-<模块>-NNN）
 
 ## 1. 目标
 

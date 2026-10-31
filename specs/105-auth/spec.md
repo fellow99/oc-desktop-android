@@ -1,6 +1,7 @@
 # 105-auth —— 鉴权（spec）
 
 > 状态：✅ as-built（2026-10-28）· 引用：规划 §5.6、宪法 C6 · 实现：`ConnectionStore.kt`、`OpencodeRuntime`（token 装配）、opencode credential store
+> 需求编号：R1..R7 等价 FR-105-001..007（历史局部编号；新写模块统一 FR-<模块>-NNN）
 
 ## 1. 目标
 

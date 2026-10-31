@@ -1,6 +1,6 @@
 # STRUCTURE —— 项目目录与文件结构（as-built）
 
-> 更新：2026-10-28 · 生成方式：源码扫描（排除 `.git/`、`build/`、`.gradle/`、载荷产物）
+> 更新：2026-11-01 · 生成方式：源码扫描（排除 `.git/`、`build/`、`.gradle/`、载荷产物）
 > 载荷产物 `app/src/main/assets/opencode-dist.tar.gz`（+.manifest.json）为 `scripts/collect-opencode.mjs` 生成物，已 gitignore，不入本表。
 
 ```
@@ -17,7 +17,7 @@ oc-desktop-android/
 ├── .gitignore                     # Android 模板 + keystore.properties + 载荷产物
 │
 ├── app/                           # Android 宿主（唯一模块 :app）
-│   ├── build.gradle.kts           # applicationId org.fellow99.oc.OCDesktopAndroid；v2.1.2(20102)；minSdk 24/target 36；
+│   ├── build.gradle.kts           # applicationId org.fellow99.oc.OCDesktopAndroid；v2.2.5(20205)；minSdk 24/target 36；
 │   │                              #   abiFilters arm64-v8a；payload 脚本同步任务（→ assets/payload/）；依赖双包
 │   ├── proguard-rules.pro
 │   └── src/main/
@@ -41,7 +41,7 @@ oc-desktop-android/
 │       └── ready.js               # server.ready.json 原子写 + server.log 追加
 │
 ├── scripts/                       # 构建与门禁流水线（host 侧 Node ≥24）
-│   ├── collect-opencode.mjs       # 上游 dist-node → assets/opencode-dist.tar.gz + manifest（基线守卫 a517687fde）
+│   ├── collect-opencode.mjs       # 上游 dist-node → assets/opencode-dist.tar.gz + manifest（基线守卫 9bbb8ce18c）
 │   └── smoke-node24.mjs           # host 门禁：--version / serve / health / UI / SSE（/api/event）
 │
 ├── docs/
@@ -52,11 +52,14 @@ oc-desktop-android/
 ├── specs/                         # 规格体系（本目录，入口 README.md）
 │   ├── README.md / SPECS_CHECKLIST.md / STRUCTURE.md / TECH.md / ARCHITECTURE.md
 │   ├── constitution.md / overall-spec.md / overall-plan.md / overall-data-model.md / overall-test-cases.md
-│   └── 101…111 / 203 / 205        # 模块目录（各含 spec.md，见 SPECS_CHECKLIST）
+│   └── 011/012/013 + 101…110 + 203…206  # 模块目录（各含 spec.md，见 SPECS_CHECKLIST）
 │
 ├── README.md / LICENSE
 │
-└── （规划中，Phase 1+ 落地：patches/v2.1.2/、plugins/、tools/provision 门禁、keystore 与签名流水线）
+├── patches/v2.2.5/               # 8 条幂等补丁（0001/0003/0006/0007/0008/0009/0010/0011）
+├── plugins/                      # git / pnpm / search / workspace-roots
+├── .github/workflows/build-release.yml  # tag 构建发布
+└── （Phase 1+ 规划：tools/provision 门禁、keystore 与签名流水线）
 ```
 
 ## 设备侧运行时沙箱布局（filesDir）

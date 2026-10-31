@@ -1,6 +1,7 @@
-# 112-js-search —— grep/glob 纯 JS 搜索兜底（spec）
+# 206-js-search —— grep/glob 纯 JS 搜索兜底（spec）
 
-> 状态：🔶 as-built（2026-10-29 host 侧；工具注册实弹待真机）· 引用：能力清单 §5-3 · 对标：hos `102-harmony-js-tools`（本工程无 hos 仓，按能力清单描述实现）
+> 状态：🔶 as-built（2026-10-29 host 侧；工具注册实弹待真机）· 引用：能力清单 §5-3 · 对标：hos `206-js-tools`（本工程无 hos 仓，按能力清单描述实现）
+> 需求编号：R1..R5 等价 FR-206-001..005（历史局部编号；新写模块统一 FR-<模块>-NNN）
 > 模块：`plugins/oc-plugin-search/`（编号 112 顺延，ark 无对应）
 
 ## 1. 目标

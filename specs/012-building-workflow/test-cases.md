@@ -1,4 +1,4 @@
-# 001-building-workflow —— 测试用例（test-cases）
+# 012-building-workflow —— 测试用例（test-cases）
 
 > 日期：2026-10-29 · 回引：[spec.md](./spec.md) 判据表 R1–R8
 > 口径：本机可执行 = 静态校验 + 等价命令；真实 tag 触发端到端（T-C9）需仓库推送权限，标注「用户侧执行」。

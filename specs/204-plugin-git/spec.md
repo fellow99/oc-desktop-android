@@ -1,6 +1,7 @@
-# 108-git-plugin —— Git 能力（isomorphic-git 插件）（spec）
+# 204-plugin-git —— Git 能力（isomorphic-git 插件）（spec）
 
-> 状态：🔶 as-built（2026-10-29 host 侧全过；设备侧判据随真机轮）· 引用：规划 §5.12 D12 · 对标：ark `108-git-plugin` / hos 204
+> 状态：🔶 as-built（2026-10-29 host 侧全过；设备侧判据随真机轮）· 引用：规划 §5.12 D12 · 对标：ark `204-plugin-git` / hos 204
+> 需求编号：R1..R5 等价 FR-204-001..005（历史局部编号；新写模块统一 FR-<模块>-NNN）
 
 ## 1. 目标
 

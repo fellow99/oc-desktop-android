@@ -1,4 +1,4 @@
-# 001-building-workflow —— 实施方案（plan）
+# 012-building-workflow —— 实施方案（plan）
 
 > 日期：2026-10-29 · 回引：[spec.md](./spec.md)、规划 §14.3、102-payload-pipeline、`keystore.properties.sample`
 

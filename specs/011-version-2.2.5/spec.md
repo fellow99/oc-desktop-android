@@ -1,12 +1,12 @@
-# 101 — 版本更新：2.2.5 功能规格（android）
+# 011 — 版本更新：2.2.5 功能规格（android）
 
-> **Module:** release ｜ **Status:** Implementing ｜ **Last Updated:** 2026-10-31
-> **需求编号:** 101-version-2.2.5 ｜ **需求名称:** 版本更新：2.2.5
+> **Module:** 011-version-2.2.5 ｜ **Status:** Implementing ｜ **Last Updated:** 2026-10-31
+> **需求编号:** 011-version-2.2.5 ｜ **需求名称:** 版本更新：2.2.5
 > **git 分支:** 不改动（沿用 `main`）
 > **涉及工程:** `oc-desktop-android`（父工程 `D:\opencode-workspace\`）
 > **上游基线:** opencode **v2.2.5**（tag `v2.2.5` / 提交 `9bbb8ce18c` / 分支 `Branch_v2.2.5`）
 > **运行期:** 进程内 Node v24.22.1（io.github.fellow99:node-bridge 0.2.0，arm64，16KB 对齐）+ 系统 WebView
-> **前序规格:** `specs/101-version-2.1.2/`
+> **前序规格:** `specs/011-version-2.1.2/`
 
 ## 1. 目的
 
