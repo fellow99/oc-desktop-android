@@ -92,6 +92,15 @@ async function main() {
 
   // ① 环境装配（import 之前生效；os.homedir()/tmpdir() 读真实 environ，Node 会同步 process.env）
   Object.assign(process.env, buildEnv(process.env, FILES_DIR));
+  fs.mkdirSync(process.env.TMPDIR, { recursive: true });
+  // Android 加固：libuv 的 os.tmpdir() 在首次调用时缓存探测结果。真机实测（Android 16 / 引擎 24.22.1）
+  // 该探测发生在本入口装配 TMPDIR 之前、缓存为 '/tmp'（应用沙箱不可写），会导致上游 Global 路径初始化
+  // `mkdir('/tmp/opencode')` EACCES 并连锁 FORTIFY 崩溃。故此处强制钉正到沙箱 tmp。
+  const os = require('node:os');
+  if (os.tmpdir() !== process.env.TMPDIR) {
+    os.tmpdir = () => process.env.TMPDIR;
+    log(`os.tmpdir() 钉正 -> ${process.env.TMPDIR}`);
+  }
 
   // ② 载荷自解包（幂等）
   if (!fs.existsSync(TAR_FILE)) throw new Error(`载荷 tar 不存在：${TAR_FILE}（Kotlin 侧 ensurePayload 未执行？）`);
