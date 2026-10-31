@@ -1,0 +1,172 @@
+# 0011-android-hardware-back.patch
+# Android 硬件返回接线（仅 Android 载荷）：
+#   宿主 onBackPressed 在 WebView 可见时 evaluateJavascript("window.__ocAndroidBack()")，
+#   网页侧（packages/app/src/runtime/android/back.ts）按优先级消费：
+#     1) 打开的移动抽屉/弹层 → 关闭
+#     2) 设置页 → 退出设置（设置内搜索/子页先回退）
+#     3) 会话页非“会话”tab → 回到“会话”tab
+#     4) 首页 / 已在“会话”tab → 不消费（宿主不退出，停留当前页）
+#   桌面/Web 从不调用该入口，零副作用；单向（宿主→网页），无 @JavascriptInterface 反射面。
+# 基线：v2.2.5 @ 9bbb8ce18c
+diff --git a/packages/app/src/entry.tsx b/packages/app/src/entry.tsx
+index b9760dd88b..1b1876f2b3 100644
+--- a/packages/app/src/entry.tsx
++++ b/packages/app/src/entry.tsx
+@@ -9,6 +9,7 @@ import { PlatformProvider } from "@/runtime/platform/platform"
+ import { createWebPlatform } from "@/runtime/platform/web"
+ import { isStandalone, PwaRoutePersistence, restorePwaRoute } from "@/runtime/platform/pwa"
+ import { KeyboardInsets } from "@/runtime/platform/keyboard"
++import { installAndroidBack } from "@/runtime/android/back"
+ import en from "@/runtime/i18n/en"
+ import zh from "@/runtime/i18n/zh"
+ import { authFromToken } from "@/runtime/server/api"
+@@ -112,5 +113,8 @@ if (root instanceof HTMLElement && root.dataset.opencodeMounted === undefined) {
+       ),
+       root,
+     )
++
++    // Android 硬件返回接线（宿主 evaluateJavascript 调用；非 Android 从不触发，零副作用）
++    installAndroidBack()
+   })
+ }
+diff --git a/packages/app/src/runtime/android/back.ts b/packages/app/src/runtime/android/back.ts
+new file mode 100644
+index 0000000000..8fda43c679
+--- /dev/null
++++ b/packages/app/src/runtime/android/back.ts
+@@ -0,0 +1,75 @@
++// Android 硬件返回接线（v2.2.5 补丁 0011）。
++//
++// 宿主在硬件返回时 evaluateJavascript("window.__ocAndroidBack()")。Web 侧按优先级消费：
++//   1. 打开的移动抽屉/弹层（corvu）→ 关闭
++//   2. 后注册者优先的命名处理器（设置退出 → 会话子视图回“会话”tab）
++//   3. 都不消费 → 返回 false：首页 / 会话 tab 上不做任何操作
++//
++// 桌面与普通浏览器从不调用 window.__ocAndroidBack，故本模块零副作用、不引入平台分支。
++// 通信为单向（宿主→网页），不使用 @JavascriptInterface，无反射面。
++
++/** 返回处理器：返回 true 表示已消费（宿主不退出）；false 表示交给下一个处理器。 */
++export type AndroidBackHandler = () => boolean
++
++const handlers = new Set<AndroidBackHandler>()
++
++/**
++ * 注册返回处理器。后注册者先执行（更靠近当前界面的视图优先，如会话/设置覆盖在外壳之上）。
++ * 返回注销函数，组件卸载时调用。
++ */
++export function registerAndroidBackHandler(handler: AndroidBackHandler): () => void {
++  handlers.add(handler)
++  return () => handlers.delete(handler)
++}
++
++/** corvu 移动抽屉/弹层的可见遮罩；存在即代表有打开的浮层。 */
++function openOverlays(): Element[] {
++  return Array.from(
++    document.querySelectorAll<HTMLElement>(
++      '[data-slot="mobile-drawer-overlay"], [data-slot="mobile-panel"] [data-corvu-overlay]',
++    ),
++  ).filter((el) => el.offsetParent !== null || el.getClientRects().length > 0)
++}
++
++/** 关闭打开的移动抽屉/弹层。优先点遮罩（corvu 标准关闭路径），必要时补发 Escape。 */
++function closeOpenOverlay(): boolean {
++  const overlay = openOverlays()[0]
++  if (!overlay) return false
++
++  const target = overlay as HTMLElement
++  const rect = target.getBoundingClientRect()
++  const x = rect.left + rect.width / 2
++  const y = rect.top + rect.height / 2
++  const opts = { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 } as const
++  target.dispatchEvent(new PointerEvent("pointerdown", opts))
++  target.dispatchEvent(new MouseEvent("mousedown", opts))
++  target.dispatchEvent(new PointerEvent("pointerup", opts))
++  target.dispatchEvent(new MouseEvent("mouseup", opts))
++  target.dispatchEvent(new MouseEvent("click", opts))
++
++  // 遮罩可能因实现差异不响应合成点击：兜底发 Escape（corvu 默认 onEscapeKeyDown 关闭）。
++  if (openOverlays().length > 0) {
++    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
++  }
++  return true
++}
++
++/** 宿主入口：返回是否已消费。务必同步，且不依赖 React/Solid 之外的时序。 */
++function dispatchAndroidBack(): boolean {
++  if (closeOpenOverlay()) return true
++  // 后注册者先消费
++  for (const handler of Array.from(handlers).reverse()) {
++    try {
++      if (handler()) return true
++    } catch {
++      // 单个处理器异常不应阻断后续处理器
++    }
++  }
++  return false
++}
++
++export function installAndroidBack() {
++  if (typeof window === "undefined") return
++  const w = window as unknown as { __ocAndroidBack?: () => boolean }
++  w.__ocAndroidBack = dispatchAndroidBack
++}
+diff --git a/packages/app/src/session/screen.tsx b/packages/app/src/session/screen.tsx
+index f32fb2421f..ea502f60b4 100644
+--- a/packages/app/src/session/screen.tsx
++++ b/packages/app/src/session/screen.tsx
+@@ -23,6 +23,7 @@ import type { SessionModel } from "@/session/model"
+ import { SESSION_PANEL_WIDTH_MIN } from "@/session/session-panel-width"
+ import { SessionPanelFrame } from "@/session/session-frame"
+ import { PluginLinks } from "@/runtime/plugin/render"
++import { registerAndroidBackHandler } from "@/runtime/android/back"
+ import { createPanelSidebar, createRegion, MobilePanel } from "@/runtime/plugin/panels"
+ import { createMobileViews, MobileViewTabs } from "@/runtime/plugin/mobile"
+ import { usePluginAttachment } from "@/runtime/plugin/host-apis"
+@@ -214,6 +215,15 @@ function SessionScreenContent(props: {
+ 
+   const mobileView = attachment.mobile.current
+ 
++  // Android 硬件返回：会话页不在“会话”tab（侧面板/More 视图）时回到“会话”tab；已在则不消费（不退出）。
++  onCleanup(
++    registerAndroidBackHandler(() => {
++      if (isDesktop() || mobileView() === "session") return false
++      attachment.mobile.select("session")
++      return true
++    }),
++  )
++
+   const mobileEntry = createMemo(() => {
+     const key = mobileView()
+ 
+diff --git a/packages/app/src/settings/shell.tsx b/packages/app/src/settings/shell.tsx
+index 659bc4067a..f275bb5ea4 100644
+--- a/packages/app/src/settings/shell.tsx
++++ b/packages/app/src/settings/shell.tsx
+@@ -34,6 +34,7 @@ import { settingsViewRedirect } from "./route"
+ import { pageIcons, pageLabels } from "./pages"
+ import { revealSettingsSearch } from "./search-reveal"
+ import { PluginSettingsPages } from "@/runtime/plugin/settings-page-view"
++import { registerAndroidBackHandler } from "@/runtime/android/back"
+ import "@/settings/settings.css"
+ 
+ const rootClientTabs = [
+@@ -83,6 +84,19 @@ export function SettingsScreen() {
+   let activation = 0
+ 
+   onMount(() => root?.focus({ preventScroll: true }))
++
++  // Android 硬件返回：设置内搜索/子页先回退，否则退出设置（回到来源会话或首页）。
++  onCleanup(
++    registerAndroidBackHandler(() => {
++      if (surface.search.back()) return true
++      if (surface.view().type !== "root") {
++        surface.back()
++        return true
++      }
++      surface.close()
++      return true
++    }),
++  )
+   createEffect(() => {
+     const next = surface.view().type
+ 

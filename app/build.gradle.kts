@@ -8,7 +8,7 @@ plugins {
 // ─────────────────────────────────────────────────────────────────────────────
 // OC Desktop Android —— 应用宿主（工程规划 docs/000 §14.1）
 //
-//   · applicationId / 版本：D16 已冻结（2.1.2 / 20102）
+//   · applicationId / 版本：2.2.5 / 20205
 //   · 引擎：node-bridge 0.2.0（API+引导件）+ node-runtime 24.22.1（engine，版本钉死）
 //   · ABI：arm64-v8a（引擎 lock 单一 ABI；x86_64 模拟器经 ARM 转译运行）
 //   · 签名材料不入库：keystore.properties（.gitignore），提供 .sample
@@ -27,8 +27,8 @@ android {
         applicationId = "org.fellow99.oc.OCDesktopAndroid"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 20102
-        versionName = "2.1.2"
+        versionCode = 20205
+        versionName = "2.2.5"
         ndk {
             // 引擎 lock：arm64-v8a 单一 ABI（runtime.lock.json matrix）
             abiFilters += listOf("arm64-v8a")

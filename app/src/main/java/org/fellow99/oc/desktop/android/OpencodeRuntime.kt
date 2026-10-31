@@ -75,6 +75,27 @@ class OpencodeRuntime(private val context: Context) {
             step("[1/6] 密码装配")
             val password = withContext(Dispatchers.IO) { ConnectionStore.loadOrCreate(context) }
 
+            // 进程级单例 Node 可能已在跑：选图（SAF）使宿主 Activity 被系统销毁重建、但进程未死时，
+            // 新 Activity 会拿到同一个 NodeRuntime。node::Start 每进程只允许一次，再 start 必被拒
+            // （rc=-1 已启动过）。此场景应**重连**现有服务，而不是重启 Node。
+            if (rt.state.value is NodeState.Running) {
+                step("[=] 检测到进程内服务运行中，重连")
+                val basic = ConnectionStore.basicToken(password)
+                val marker = Diagnostics.readyMarker(context)
+                if (marker != null && marker.pid == android.os.Process.myPid() &&
+                    withContext(Dispatchers.IO) { Diagnostics.probeHealth(marker.port, basic) } in 200..299
+                ) {
+                    Diagnostics.evidence(context, "reuse running node pid=${marker.pid} port=${marker.port}（Activity 重建后重连）")
+                    emitReady(password, marker.port)
+                    return
+                }
+                // 状态显示 Running 但本进程 marker/探活不过：单例无法在同进程二次 start，只能让用户整进程重启
+                fail(
+                    "reconnect",
+                    "进程内 Node 标记为运行但探活失败（Activity 被系统回收后无法在同进程重启）。请点“重启应用”整进程冷启动。",
+                )
+            }
+
             // [2/6] 载荷就位（缺 tar.gz → 明确失败并给构建指引）
             step("[2/6] 载荷就位")
             withContext(Dispatchers.IO) { ensurePayload(context) }
@@ -106,16 +127,21 @@ class OpencodeRuntime(private val context: Context) {
 
             // [6/6] 交给 WebView（MainActivity 订阅 Ready）
             step("[6/6] 连接界面")
-            val token = Base64.encodeToString(
-                "opencode:$password".toByteArray(Charsets.UTF_8),
-                Base64.NO_WRAP,
-            )
-            _phase.value = Phase.Ready("http://127.0.0.1:${ready.port}", token, ready.port)
+            emitReady(password, ready.port)
         } catch (_: LaunchFailed) {
             // 状态已置 Failed；此处仅兜住控制流
         } catch (t: Throwable) {
             fail("unexpected", "未预期异常：${t.javaClass.simpleName}: ${t.message}")
         }
+    }
+
+    /** 就绪后向 UI 发布 Ready（冷启动与“Activity 重建后重连”共用）。 */
+    private fun emitReady(password: String, port: Int) {
+        val token = Base64.encodeToString(
+            "opencode:$password".toByteArray(Charsets.UTF_8),
+            Base64.NO_WRAP,
+        )
+        _phase.value = Phase.Ready("http://127.0.0.1:$port", token, port)
     }
 
     /** D9 环境契约（payload/lib/env.js 与本表镜像：变量名只在这两处定义）。 */
@@ -147,7 +173,7 @@ class OpencodeRuntime(private val context: Context) {
         "OC_READY_FILE" to "$filesDir/payload/server.ready.json",
         "OC_SERVER_LOG" to "$filesDir/logs/server.log",
         "OC_PAYLOAD_TAR" to "$filesDir/incoming/opencode-dist.tar.gz",
-        "OC_VERSION" to OC_VERSION,
+        "OC_VERSION" to appVersion(context),
         "OC_HOST" to "127.0.0.1",
     )
 
@@ -169,7 +195,8 @@ class OpencodeRuntime(private val context: Context) {
                 org.json.JSONObject(manifest.readText()).optString("version")
             }.getOrNull()
         }
-        if (manifestVersion == OC_VERSION) {
+        val currentVersion = appVersion(context)
+        if (manifestVersion == currentVersion) {
             Diagnostics.evidence(context, "payload marker 命中（version=$manifestVersion），跳过 tar 拷贝")
             return
         }
@@ -228,7 +255,13 @@ class OpencodeRuntime(private val context: Context) {
         /** 与 ark 一致：bundle import 可能 2–6s，留足余量（§7.4）。 */
         private const val TIMEOUT_MS = 180_000L
 
-        /** 载荷版本戳（=versionName；与 payload/.manifest.json.version 比对，升级即重解包）。 */
-        const val OC_VERSION = "2.1.2"
+        // （载荷版本戳改由 appVersion(context) 动态取 versionName，避免发版漏改导致升级不重解包。）
     }
+
+    /** 当前 APK 版本名（载荷版本戳，与 payload/.manifest.json.version 比对，升级即重解包）。 */
+    private fun appVersion(context: Context): String =
+        runCatching {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "0.0.0"
 }

@@ -92,7 +92,7 @@ try {
   if (index.status !== 200 || !/<html|<!doctype/i.test(html)) throw new Error(`/ → ${index.status}（非 UI html）`)
   console.log(`[smoke] / → ${index.status}（${html.length} bytes）`)
   // ④b 品牌断言（P1-4 / 0010）：document.title 判据的归档形态——首页 <title> 必须是 OC Desktop
-  const title = /<title>([^<]*)<\/title>/i.exec(html)?.[1] ?? ''
+  const title = /<title[^>]*>([^<]*)<\/title>/i.exec(html)?.[1] ?? ''
   if (!/^OC Desktop/.test(title)) throw new Error(`品牌断言失败：<title>=「${title}」≠ OC Desktop*（0010 未生效？）`)
   console.log(`[smoke] title → ${title}`)
 

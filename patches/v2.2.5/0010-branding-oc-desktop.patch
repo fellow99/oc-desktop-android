@@ -1,0 +1,13 @@
+diff --git a/packages/app/index.html b/packages/app/index.html
+index 1cec152cd0..059ff868ee 100644
+--- a/packages/app/index.html
++++ b/packages/app/index.html
+@@ -7,7 +7,7 @@
+       content="width=device-width, initial-scale=1, interactive-widget=resizes-content, viewport-fit=cover"
+     />
+     <!-- data-sm lets the MetaProvider replace this pre-load title with the app's <Title> tags. -->
+-    <title data-sm>OpenCode</title>
++    <title data-sm>OC Desktop</title>
+     <link rel="icon" type="image/x-icon" href="%OPENCODE_FAVICON%" />
+     <link rel="apple-touch-icon" sizes="180x180" href="%OPENCODE_APPLE_TOUCH_ICON%" />
+     <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials" />

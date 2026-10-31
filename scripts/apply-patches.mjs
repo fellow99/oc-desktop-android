@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * 幂等补丁器 —— oc-desktop-android / 工程规划 §9、patches/v2.1.2/README.md（移植自 ark 同名脚本）。
+ * 幂等补丁器 —— oc-desktop-android / 工程规划 §9、patches/v2.2.5/README.md（移植自 ark 同名脚本）。
  *
  * 解决的问题：`../opencode` 是 **ark / hos / 本工程共用** 的 submodule，各工程有一套补丁。
  * 若不设守卫，「另一个工程留下的脏工作树」会被当成「本工程已打补丁」，或者直接 `git apply`
  * 失败在半路，留下**半应用**状态。
  *
  * 因此本脚本的规则是：
- *   ① HEAD 必须是锁定基线（默认 a517687fde，可用 EXPECTED_BASELINE 覆盖）；
+ *   ① HEAD 必须是锁定基线（默认 9bbb8ce18c，可用 EXPECTED_BASELINE 覆盖）；
  *   ② 工作树必须干净（`git status --porcelain` 为空），否则拒绝执行；
  *      确实要丢弃本地改动时显式 `--reset --yes`（先打印将删除/还原的内容）；
  *   ③ 每条补丁的幂等判据是 `git apply --reverse --check` 成功 ⇒ 已应用，跳过；
@@ -29,8 +29,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const patchDir = path.join(root, 'patches', 'v2.1.2')
-const EXPECTED = (process.env.EXPECTED_BASELINE ?? 'a517687fde').trim()
+const patchDir = path.join(root, 'patches', 'v2.2.5')
+const EXPECTED = (process.env.EXPECTED_BASELINE ?? '9bbb8ce18c').trim()
 const args = process.argv.slice(2)
 const has = (name) => args.includes(name)
 const valueOf = (name) => {

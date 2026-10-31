@@ -1,0 +1,332 @@
+diff --git a/packages/app/src/workspaces/selection/dialog.tsx b/packages/app/src/workspaces/selection/dialog.tsx
+index cd5583998b..f429407b5e 100644
+--- a/packages/app/src/workspaces/selection/dialog.tsx
++++ b/packages/app/src/workspaces/selection/dialog.tsx
+@@ -47,12 +47,17 @@ import {
+   crumbSegments,
+   defaultFolderName,
+   filterHiddenEntries,
++  importCancelOf,
++  importSandboxTree,
++  importStatusOf,
+   isWithin,
+   mkdirInRoot,
+   openAppPermissionSettings,
+   probeWorkspaceRoots,
+   readStoredRootId,
++  removeSandboxProject,
+   requestDirectoryPermission,
++  setCurrentProject,
+   writeStoredRootId,
+   type RootId,
+   type RootSet,
+@@ -124,6 +129,10 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
+     newFolderError: "",
+     newFolderBusy: false,
+     permissionBusy: false,
++    // Android（203 R1）：SAF 导入 / 删除 / 设默认（能力由 roots.latest.capabilities 自门控）
++    importBusy: false,
++    importToken: "",
++    importMessage: "",
+   })
+   /** 已列举目录的同级名称（键与 load() 的 key 一致），用于新建文件夹默认名去重 */
+   const namesByPath = new Map<string, string[]>()
+@@ -658,6 +667,101 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
+     await openAppPermissionSettings(sdk)
+   }
+ 
++  // ------------------------------------------------------------ Android：SAF 导入 / 删除 / 设默认（203 R1/R2/R4）
++  const sandboxCaps = () => (rootsUi.rootId === "sandbox" ? (roots.latest?.capabilities ?? []) : [])
++  const canImportHere = () => sandboxCaps().includes("import") && activeRoot()?.available
++  const canSetDefaultHere = () => sandboxCaps().includes("setCurrent") && activeRoot()?.available
++  const canRemoveHere = () =>
++    sandboxCaps().includes("remove") &&
++    activeRoot()?.available &&
++    (state.selected || state.root).split("/").filter(Boolean).length > 0
++
++  /** 当前选中项目在沙箱根下的第一段（项目目录名） */
++  const firstSandboxSegment = () => (state.selected || state.root).split("/").filter(Boolean)[0] ?? ""
++
++  async function cancelImport() {
++    const token = rootsUi.importToken
++    if (!token) return
++    await importCancelOf(sdk, token)
++  }
++
++  async function setDefaultProject() {
++    const first = firstSandboxSegment()
++    if (!first || rootsUi.importBusy) return
++    const result = await setCurrentProject(sdk, first)
++    setRootsUi(
++      "importMessage",
++      result.ok
++        ? `${language.t("dialog.directory.roots.setDefaultDone")}: ${first}`
++        : `${language.t("dialog.directory.roots.importFailed")}: ${result.message}`,
++    )
++    if (result.ok) await refreshRoots()
++  }
++
++  async function importViaSaf() {
++    if (rootsUi.importBusy) return
++    setRootsUi({ importBusy: true, importMessage: language.t("dialog.directory.roots.importing") })
++    try {
++      const started = await importSandboxTree(sdk, "")
++      if (!started.ok || !started.token) {
++        setRootsUi(
++          "importMessage",
++          language.t("dialog.directory.roots.importFailed") + (started.message ? `: ${started.message}` : ""),
++        )
++        return
++      }
++      setRootsUi("importToken", started.token)
++      for (let i = 0; i < 3600; i++) {
++        await new Promise((resolve) => setTimeout(resolve, 500))
++        const status = await importStatusOf(sdk, started.token)
++        if (!status.ok) {
++          setRootsUi(
++            "importMessage",
++            language.t("dialog.directory.roots.importFailed") + `: ${status.message}`,
++          )
++          return
++        }
++        if (status.canceled) {
++          setRootsUi("importMessage", language.t("dialog.directory.roots.importCanceled"))
++          return
++        }
++        if (status.done) {
++          if (status.importedTo) {
++            setRootsUi(
++              "importMessage",
++              language.t("dialog.directory.roots.importDone") + (status.name ? `: ${status.name}` : ""),
++            )
++            await refreshRoots()
++          } else {
++            setRootsUi(
++              "importMessage",
++              language.t("dialog.directory.roots.importFailed") + (status.error ? `: ${status.error}` : ""),
++            )
++          }
++          return
++        }
++        setRootsUi("importMessage", `${language.t("dialog.directory.roots.importing")} ${status.copiedFiles ?? 0}`)
++      }
++      setRootsUi("importMessage", language.t("dialog.directory.roots.importFailed"))
++    } finally {
++      setRootsUi({ importToken: "", importBusy: false })
++    }
++  }
++
++  async function removeSelectedProject() {
++    const first = firstSandboxSegment()
++    if (!first || rootsUi.importBusy) return
++    // 不可逆批量删除：必须二次确认（评审 M7）
++    if (!globalThis.confirm(`${language.t("dialog.directory.roots.removeConfirm")}: ${first}`)) return
++    const result = await removeSandboxProject(sdk, first)
++    if (result.ok) {
++      setState({ selected: "", root: "" })
++      await refreshRoots()
++    } else {
++      setRootsUi("importMessage", `${language.t("dialog.directory.roots.importFailed")}: ${result.message}`)
++    }
++  }
++
+   /** 打开「新建文件夹」输入并填入去重后的默认名（FR-203-012/013） */
+   function openNewFolder() {
+     setRootsUi({
+@@ -933,6 +1037,28 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
+           <Show when={rootsUi.newFolderError}>
+             <div class="directory-picker-state">{rootsUi.newFolderError}</div>
+           </Show>
++          <Show when={rootsMode() && rootsUi.importMessage !== ""}>
++            <div class="directory-picker-state">{rootsUi.importMessage}</div>
++          </Show>
++          <Show when={rootsMode() && (canImportHere() || canSetDefaultHere() || canRemoveHere())}>
++            <div class="directory-picker-actions">
++              <Show when={canImportHere()}>
++                <Button size="small" variant="ghost" onClick={() => void (rootsUi.importBusy ? cancelImport() : importViaSaf())}>
++                  {rootsUi.importBusy ? language.t("common.cancel") : language.t("dialog.directory.roots.import")}
++                </Button>
++              </Show>
++              <Show when={canSetDefaultHere()}>
++                <Button size="small" variant="ghost" disabled={rootsUi.importBusy} onClick={() => void setDefaultProject()}>
++                  {language.t("dialog.directory.roots.setDefault")}
++                </Button>
++              </Show>
++              <Show when={canRemoveHere() && !rootsUi.importBusy}>
++                <Button size="small" variant="ghost" onClick={() => void removeSelectedProject()}>
++                  {language.t("dialog.directory.roots.remove")}
++                </Button>
++              </Show>
++            </div>
++          </Show>
+         </Show>
+         <Show when={!rootsMode()}>
+         <div class="directory-picker-path" ref={pathArea}>
+diff --git a/packages/app/src/workspaces/selection/roots.ts b/packages/app/src/workspaces/selection/roots.ts
+index de890b46eb..5047a838bf 100644
+--- a/packages/app/src/workspaces/selection/roots.ts
++++ b/packages/app/src/workspaces/selection/roots.ts
+@@ -28,6 +28,8 @@ export type RootSet = {
+   /** 真实家目录（诊断用；宿主注入） */
+   readonly home: string
+   readonly roots: readonly RootInfo[]
++  /** Android 壳插件声明的能力（203 R1：import/remove/setCurrent）；ark / hos 部署无此字段 */
++  readonly capabilities?: readonly string[]
+ }
+ 
+ export type MkdirResult = {
+@@ -181,8 +183,13 @@ function asRootSet(output: unknown): RootSet | undefined {
+       },
+     ]
+   })
++  const capabilities = Array.isArray((candidate as { capabilities?: unknown }).capabilities)
++    ? ((candidate as { capabilities: unknown[] }).capabilities).filter(
++        (x): x is string => typeof x === "string",
++      )
++    : undefined
+   if (roots.length === 0) return undefined
+-  return { home: candidate.home, roots }
++  return { home: candidate.home, roots, capabilities }
+ }
+ 
+ /**
+@@ -272,3 +279,99 @@ export async function openAppPermissionSettings(sdk: RpcSdk): Promise<AppInfoRes
+   }
+   return { ok: false, message: "" }
+ }
++
++// ------------------------------------------------------------------ Android 沙箱动作（203 R1/R2/R4；能力由 oc-plugin-workspace-roots 提供）
++
++export type ActionResult = { readonly ok: boolean; readonly code: string; readonly message: string }
++
++function asActionResult(r: Record<string, unknown>): ActionResult {
++  return {
++    ok: r.ok === true,
++    code: typeof r.code === "string" ? r.code : "",
++    message: typeof r.message === "string" ? r.message : "",
++  }
++}
++
++/** SAF 导入：发起后返回轮询 token */
++export async function importSandboxTree(
++  sdk: RpcSdk,
++  suggestedName: string,
++): Promise<ActionResult & { token?: string; name?: string }> {
++  try {
++    const output = (
++      await sdk.api.rpc.call({ rpcID: ROOTS_RPC_ID, method: "import", input: { suggestedName } })
++    ).output
++    const r = (output ?? {}) as Record<string, unknown>
++    return {
++      ...asActionResult(r),
++      token: typeof r.token === "string" ? r.token : undefined,
++      name: typeof r.name === "string" ? r.name : undefined,
++    }
++  } catch (error) {
++    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
++  }
++}
++
++export type ImportStatus = ActionResult & {
++  done?: boolean
++  canceled?: boolean
++  copiedFiles?: number
++  importedTo?: string
++  name?: string
++  error?: string
++}
++
++/** SAF 导入进度轮询 */
++export async function importStatusOf(sdk: RpcSdk, token: string): Promise<ImportStatus> {
++  try {
++    const output = (
++      await sdk.api.rpc.call({ rpcID: ROOTS_RPC_ID, method: "importStatus", input: { token } })
++    ).output
++    const r = (output ?? {}) as Record<string, unknown>
++    return {
++      ...asActionResult(r),
++      done: r.done === true,
++      canceled: r.canceled === true,
++      copiedFiles: typeof r.copiedFiles === "number" ? r.copiedFiles : 0,
++      importedTo: typeof r.importedTo === "string" ? r.importedTo : undefined,
++      name: typeof r.name === "string" ? r.name : undefined,
++      error: typeof r.error === "string" ? r.error : undefined,
++    }
++  } catch (error) {
++    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
++  }
++}
++
++/** 取消进行中的 SAF 导入 */
++export async function importCancelOf(sdk: RpcSdk, token: string): Promise<ActionResult> {
++  try {
++    const output = (
++      await sdk.api.rpc.call({ rpcID: ROOTS_RPC_ID, method: "importCancel", input: { token } })
++    ).output
++    return asActionResult((output ?? {}) as Record<string, unknown>)
++  } catch (error) {
++    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
++  }
++}
++
++/** 删除沙箱下指定项目目录（第一段） */
++export async function removeSandboxProject(sdk: RpcSdk, name: string): Promise<ActionResult> {
++  try {
++    const output = (await sdk.api.rpc.call({ rpcID: ROOTS_RPC_ID, method: "remove", input: { name } })).output
++    return asActionResult((output ?? {}) as Record<string, unknown>)
++  } catch (error) {
++    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
++  }
++}
++
++/** 把指定项目设为启动默认工作区 */
++export async function setCurrentProject(sdk: RpcSdk, name: string): Promise<ActionResult> {
++  try {
++    const output = (
++      await sdk.api.rpc.call({ rpcID: ROOTS_RPC_ID, method: "setCurrent", input: { name } })
++    ).output
++    return asActionResult((output ?? {}) as Record<string, unknown>)
++  } catch (error) {
++    return { ok: false, code: "call-failed", message: error instanceof Error ? error.message : String(error) }
++  }
++}
+diff --git a/packages/app/src/runtime/i18n/en.ts b/packages/app/src/runtime/i18n/en.ts
+index 8859134a70..eb8aaef5b8 100644
+--- a/packages/app/src/runtime/i18n/en.ts
++++ b/packages/app/src/runtime/i18n/en.ts
+@@ -417,6 +417,15 @@ export const dict = {
+   "dialog.directory.roots.requestPermission": "Request access",
+   "dialog.directory.roots.openSettings": "Open settings",
+   "dialog.directory.roots.retry": "Retry",
++  "dialog.directory.roots.import": "Import (SAF)",
++  "dialog.directory.roots.importing": "Importing…",
++  "dialog.directory.roots.importDone": "Import finished",
++  "dialog.directory.roots.importFailed": "Import failed",
++  "dialog.directory.roots.importCanceled": "Import canceled",
++  "dialog.directory.roots.setDefault": "Set as default",
++  "dialog.directory.roots.setDefaultDone": "Default workspace set",
++  "dialog.directory.roots.remove": "Delete",
++  "dialog.directory.roots.removeConfirm": "Delete this project permanently",
+   "dialog.directory.newFolder.action": "New folder",
+   "dialog.directory.newFolder.label": "Folder name",
+   "dialog.directory.newFolder.default": "Untitled folder",
+diff --git a/packages/app/src/runtime/i18n/zh.ts b/packages/app/src/runtime/i18n/zh.ts
+index c30e594485..b5bbcd91e6 100644
+--- a/packages/app/src/runtime/i18n/zh.ts
++++ b/packages/app/src/runtime/i18n/zh.ts
+@@ -283,6 +283,15 @@ export const dict = {
+   "dialog.directory.roots.requestPermission": "请求授权",
+   "dialog.directory.roots.openSettings": "去系统设置",
+   "dialog.directory.roots.retry": "重试",
++  "dialog.directory.roots.import": "导入（SAF）",
++  "dialog.directory.roots.importing": "导入中…",
++  "dialog.directory.roots.importDone": "导入完成",
++  "dialog.directory.roots.importFailed": "导入失败",
++  "dialog.directory.roots.importCanceled": "已取消导入",
++  "dialog.directory.roots.setDefault": "设为默认",
++  "dialog.directory.roots.setDefaultDone": "已设为启动默认工作区",
++  "dialog.directory.roots.remove": "删除",
++  "dialog.directory.roots.removeConfirm": "确定永久删除该项目吗",
+   "dialog.directory.newFolder.action": "新建文件夹",
+   "dialog.directory.newFolder.label": "文件夹名称",
+   "dialog.directory.newFolder.default": "未命名文件夹",

@@ -4,7 +4,7 @@ OC Desktop Android（`org.fellow99.oc.OCDesktopAndroid`）随包分发以下第�
 
 | 组件 | 版本 | 许可 | 来源 |
 |---|---|---|---|
-| opencode（CLI bundle + Web UI） | 2.1.2 | MIT | https://github.com/anomalyco/opencode |
+| opencode（CLI bundle + Web UI） | 2.2.5 | MIT | https://github.com/anomalyco/opencode |
 | Node.js（libnode.so，含 V8 / OpenSSL / ICU / zlib 等，详见其上游 LICENSES） | 24.22.1 | MIT（及随包内嵌组件各自的许可） | https://nodejs.org （aosp-node-runtime 自建） |
 | node-bridge / node-runtime（Android 桥与引擎 AAR） | 0.2.0 / 24.22.1 | MIT | io.github.fellow99（Maven） |
 | isomorphic-git（含其传递依赖，见插件内 node_modules/*/LICENSE） | 1.44.2 | MIT | https://isomorphic-git.org |

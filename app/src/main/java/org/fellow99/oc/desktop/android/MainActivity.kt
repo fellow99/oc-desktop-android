@@ -4,11 +4,14 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -24,7 +27,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import android.net.Uri
 import android.content.Intent
 import java.net.URLEncoder
 
@@ -48,7 +50,14 @@ class MainActivity : Activity() {
 
     private var firstPageDone = false
 
+    /** WebView <input type=file> 待回传的选择回调（onShowFileChooser 暂存，选择器返回后置空）。 */
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
+
+
     companion object {
+        /** WebView <input type=file> 的 onActivityResult 请求码（与 SafImport 的码不冲突）。 */
+        private const val REQUEST_CODE_FILE_CHOOSER = 1001
+
         @Volatile
         private var instance: MainActivity? = null
 
@@ -97,6 +106,13 @@ class MainActivity : Activity() {
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_FILE_CHOOSER) {
+            val callback = filePathCallback ?: return
+            val uris = if (resultCode == RESULT_OK && data != null) IntentResolver.extractUris(data) else emptyArray()
+            callback.onReceiveValue(uris)
+            filePathCallback = null
+            return
+        }
         if (requestCode == SafImport.REQUEST_CODE) {
             val treeUri = data?.data
             SafImport.onPickerResult(this, resultCode, treeUri)
@@ -106,18 +122,12 @@ class MainActivity : Activity() {
     @Deprecated("Deprecated in Java")
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        if (webView.visibility == View.VISIBLE && webView.canGoBack()) {
-            webView.goBack()
-            return
-        }
         if (webView.visibility == View.VISIBLE) {
-            AlertDialog.Builder(this)
-                .setTitle("退出")
-                .setMessage("退出 OC Desktop？（进程内 Node 随应用结束，会话数据已落盘）")
-                .setPositiveButton("退出") { _, _ -> finishAndRemoveTask() }
-                .setNeutralButton("关于", { _, _ -> showAbout() })
-                .setNegativeButton("取消", null)
-                .show()
+            // 返回语义交给载荷（补丁 0011）：抽屉→关 / 设置→退出 / 会话非会话 tab→回会话 tab；
+            // 首页或已在会话 tab 时网页不消费（返回 false）→ 宿主停留，不退出、不弹退出框。
+            webView.evaluateJavascript(
+                "(window.__ocAndroidBack && window.__ocAndroidBack()) ? true : false",
+            ) { /* 网页侧已自行处理或显式不消费；宿主一律不退出 */ }
             return
         }
         super.onBackPressed()
@@ -224,6 +234,40 @@ class MainActivity : Activity() {
             domStorageEnabled = true // SPA 首屏必需（D4）
             databaseEnabled = true
         }
+        // Web UI 的「+ → 图片和文件」走 <input type=file>；不实现 onShowFileChooser 则点击无反应。
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                view: WebView?,
+                callback: ValueCallback<Array<Uri>>?,
+                params: FileChooserParams?,
+            ): Boolean {
+                val cb = callback ?: return false
+                // 上一次未回调时先复位，避免 WebView 认为选择器仍打开而后续点击失效
+                filePathCallback?.onReceiveValue(null)
+                filePathCallback = cb
+                val mimeTypes = params?.acceptTypes?.filter { it.isNotBlank() } ?: emptyList()
+                val base = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    if (mimeTypes.isEmpty()) {
+                        type = "*/*"
+                    } else if (mimeTypes.size == 1) {
+                        type = mimeTypes.first()
+                    } else {
+                        type = "*/*"
+                        putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes.toTypedArray())
+                    }
+                    // opencode 附件支持多选；单选模式下多选开关也无副作用
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                }
+                return runCatching {
+                    startActivityForResult(Intent.createChooser(base, "选择文件"), REQUEST_CODE_FILE_CHOOSER)
+                    true
+                }.getOrElse {
+                    filePathCallback = null
+                    false
+                }
+            }
+        }
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url ?: return false
@@ -273,5 +317,16 @@ class MainActivity : Activity() {
         webView.visibility = View.GONE
         errorView.visibility = View.VISIBLE
         errorText.text = "启动失败（阶段：${phase.stage}）\n\n${phase.reason}"
+    }
+}
+
+/** 从 SAF OpenDocument 返回的 Intent 中取单选/多选 content URI。 */
+private object IntentResolver {
+    fun extractUris(intent: Intent): Array<Uri> {
+        val clip = intent.clipData
+        if (clip != null) {
+            return Array(clip.itemCount) { i -> clip.getItemAt(i).uri }
+        }
+        return intent.data?.let { arrayOf(it) } ?: emptyArray()
     }
 }

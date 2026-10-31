@@ -16,7 +16,6 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const repo = path.resolve(root, process.env.OPENCODE_DIR ?? '../opencode')
 const target = process.env.OPENCODE_TARGET ?? 'linux-arm64'
 const nodeTarget = (process.env.OPENCODE_NODE_TARGET ?? '').trim()
-const bundleOnly = !process.argv.includes('--with-sea')
 
 // 未显式指定 node24 即判失败（否则上游按默认 node 产出，与设备运行时 24.22.1 错位）
 if (nodeTarget === '') {
@@ -56,8 +55,9 @@ if (!existsSync(path.join(repo, 'package.json'))) {
   process.exit(2)
 }
 
+// 目标平台经环境变量 OPENCODE_TARGET 传给 build-node.ts（其只认该 env；
+// CLI 参数 --target= 不被识别会静默回退到主机平台，曾误打入 win32-x64 原生件）。
 const flags = ['--bundle-only']
-if (bundleOnly) flags.push('--target=' + target)
 
 const skipInstall = process.argv.includes('--skip-install')
 if (!skipInstall) {
@@ -65,6 +65,7 @@ if (!skipInstall) {
 }
 run(BUN, ['run', '--cwd', 'packages/cli', 'script/build-node.ts', ...flags], repo, {
   OPENCODE_NODE_TARGET: nodeTarget,
+  OPENCODE_TARGET: target,
 })
 
 const out = path.join(repo, 'packages/cli/dist-node')

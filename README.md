@@ -11,9 +11,9 @@
 | 项 | 值 |
 |---|---|
 | 应用名 / 包名 | **OC Desktop Android** / `org.fellow99.oc.OCDesktopAndroid` |
-| 版本 | `2.1.2` / `versionCode 20102` |
+| 版本 | `2.2.5` / `versionCode 20205` |
 | 目标设备 | 平板 / 折叠屏 / 桌面窗口优先（phone 可用，不做专属设计） |
-| 上游基线 | opencode **v2.1.2**（tag `v2.1.2` / 分支 `Branch_v2.1.2`） |
+| 上游基线 | opencode **v2.2.5**（tag `v2.2.5` / 提交 `9bbb8ce18c` / 分支 `Branch_v2.2.5`） |
 | Node 运行时 | `io.github.fellow99:node-bridge:0.2.0` + `io.github.fellow99:node-runtime`（Maven 双包）→ Node 24.x（引擎版本以 aosp-node-runtime 仓 `runtime.lock.json` 为准，当前 24.22.1 / arm64-v8a） |
 | 渲染 | **系统 WebView**（应用进程内；`networkSecurityConfig` 放行 loopback 明文） |
 | 数据 | `node:sqlite`（WAL）→ `<filesDir>/data/opencode/opencode.db` |
@@ -25,7 +25,7 @@
 
 ```bash
 # ① 上游产物（host 侧；补丁 → bun → bundle-only → 裁剪 → 插件物化 → tar.gz）
-node scripts/apply-patches.mjs            # 幂等补丁 + 基线守卫（Branch_v2.1.2；7 条 = ark 五件套 + 0009/0010）
+node scripts/apply-patches.mjs            # 幂等补丁 + 基线守卫（Branch_v2.2.5，基线 9bbb8ce18c；7 条 = ark 五件套 + 0009/0010）
 OPENCODE_NODE_TARGET=node24 BUN_BIN=<bun-1.4.2> node scripts/build-opencode.mjs   # --bundle-only（上游 build-node 守卫要求 bun ^1.4.2；CI 同口径）
 node scripts/collect-plugins.mjs          # 插件物化（git/workspace-roots/search → build/plugins）
 node scripts/collect-opencode.mjs         # verify-runtime 门禁 + 插件入包 → assets/opencode-dist.tar.gz + SHA-256 清单
