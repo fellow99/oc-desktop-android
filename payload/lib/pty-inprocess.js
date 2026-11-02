@@ -241,7 +241,9 @@ function makeDaemon(root, name) {
   const token = crypto_random();
   const dir = path.join(root, name);
   fs.mkdirSync(dir, { recursive: true });
-  const socketPath = path.join(dir, 'service.sock');
+  // Android AF_UNIX sun_path 限 108 字节；state 目录路径太长 ⇒ listen EINVAL。socket 落到沙箱 tmp 的短路径，
+  // 由 service.json 记录绝对路径，daemon.ts 客户端按该路径 connect（文件读写不受 108 限制）。
+  const socketPath = path.join(require('os').tmpdir(), `oc-pty-${crypto_random().slice(0, 12)}.sock`);
   const instance_id = `inprocess-${process.pid}-${crypto_random()}`;
   const server = net.createServer((socket) => handleConnection(socket, daemon));
   const daemon = { token, instance_id, server, socketPath };

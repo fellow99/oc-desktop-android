@@ -13,6 +13,7 @@ Web 层补丁与 hos / ark 同源同语义（node24 目标）；本端另含 And
 | 0009-workspace-import-actions.patch | **Android 专属**：沙箱 SAF 导入/取消/删除/设默认（capabilities 自门控 + 10 i18n key） | 按 v2.2.5 store 结构重做，delta 基于 0007 之后的状态生成 |
 | 0010-branding-oc-desktop.patch | index.html `<title>OC Desktop</title>` | 适配 `<title data-sm>` |
 | 0011-android-hardware-back.patch | **Android 专属**：硬件返回接线（新增 `runtime/android/back.ts` + entry 安装 + 设置/会话注册）。抽屉→关、设置→退出、会话非会话 tab→回会话 tab；首页/会话 tab 不退出 | v2.2.5 新增（基于 SettingsSurface/attachment.mobile/corvu） |
+| 0012-pty-inprocess.patch | **Android 专属**：`#pty`/`#persistent-pty-binary` 导出图新增 `android` 条件（→ node 变体），vite 构建条件前插 `android`。使本端在 ohos 打桩之外启用 node-pty 真实现（进程内 node-pty + 进程内 PersistentPty 守护，见 docs/111-PTY实现方案.md） | v2.2.5 新增（delta 基于已应用 0003 后状态） |
 
 ## 顺序依赖
 
@@ -22,7 +23,7 @@ Web 层补丁与 hos / ark 同源同语义（node24 目标）；本端另含 And
 
 ## 验证
 
-- 干净 v2.2.5 工作树按编号顺序 `apply-patches.mjs`：8/8 应用、0 失败。
+- 干净 v2.2.5 工作树按编号顺序 `apply-patches.mjs`：9/9 应用、0 失败。
 - roots.test.ts 23 项通过；改动面 tsc 无新增错误（仅余预存在的 custom-elements.d.ts 符号链接 TS1128×2）。
 - build（node24 / bun 1.4.4）→ collect-opencode/plugins（4 插件 + git 828 文件）
   → smoke-node24（version=2.2.5、/global/health 200、/ 200、title=OC Desktop、server.connected）全绿。

@@ -1,0 +1,42 @@
+diff --git a/packages/cli/vite.node.config.ts b/packages/cli/vite.node.config.ts
+index 9181075ce2..652a8f4303 100644
+--- a/packages/cli/vite.node.config.ts
++++ b/packages/cli/vite.node.config.ts
+@@ -116,7 +116,7 @@ const resolve = {
+       replacement: path.join(path.dirname(createRequire(import.meta.url).resolve("ws/package.json")), "wrapper.mjs"),
+     },
+   ],
+-  conditions: ["ohos", "node"],
++  conditions: ["android", "ohos", "node"],
+ }
+ 
+ const output = (entryFileNames: string, banner?: string) => ({
+@@ -289,7 +289,7 @@ export function mainConfig(input: NodeBuildInput): UserConfig {
+       FFF_LIBC: input.target.platform === "linux" ? JSON.stringify("gnu") : "undefined",
+       "process.env.WS_NO_BUFFER_UTIL": JSON.stringify("1"),
+     },
+-    ssr: { noExternal: true, resolve: { conditions: ["ohos", "node"] } },
++    ssr: { noExternal: true, resolve: { conditions: ["android", "ohos", "node"] } },
+     build: {
+       ssr: "src/node/index.ts",
+       target: process.env.OPENCODE_NODE_TARGET ?? "node26",
+diff --git a/packages/core/package.json b/packages/core/package.json
+index f62d96b8ef..718ea57b62 100644
+--- a/packages/core/package.json
++++ b/packages/core/package.json
+@@ -40,6 +40,7 @@
+     },
+     "#pty": {
+       "workerd": "./src/pty/pty.workerd.ts",
++      "android": "./src/pty/pty.node.ts",
+       "ohos": "./src/pty/pty.ohos.ts",
+       "bun": "./src/pty/pty.bun.ts",
+       "node": "./src/pty/pty.node.ts",
+@@ -51,6 +52,7 @@
+     },
+     "#persistent-pty-binary": {
+       "workerd": "./src/persistent-pty/binary.workerd.ts",
++      "android": "./src/persistent-pty/binary.node.ts",
+       "ohos": "./src/persistent-pty/binary.ohos.ts",
+       "bun": "./src/persistent-pty/binary.bun.ts",
+       "node": "./src/persistent-pty/binary.node.ts",

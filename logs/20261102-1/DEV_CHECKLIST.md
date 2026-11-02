@@ -31,3 +31,10 @@
 - [x] host 单测：createHandler 全 op（ping/own/create/list/write/rename/snapshot/read_rows/terminate/shutdown/unknown）PASS
 - [ ] 4.4 设备端终端面板可用性（需 payload bundle 重建 + 全应用运行）
 - [ ] 4.5 既有 e2e 回归（Node 26）
+
+## 更新（20261102-1 设备端 M2 验证）
+- [x] 构建配置：ohos 打桩硬禁用 PTY → 新增 0012 补丁 android 条件（#pty/#persistent-pty-binary → node 变体）
+- [x] 修复：socket 路径超 Android AF_UNIX sun_path 108B → 落沙箱 tmp 短路径（listen EINVAL 消除）
+- [x] M1 载荷重建：build-opencode(node26, bun1.4.4) → collect → smoke-node26 全绿 → regression 全绿 → APK 打包载荷
+- [x] **设备验证 ✅**：官方 API POST create → `pty_persistent_1` running pid real；list 显示 output.tail=44（真 shell 输出）；服务端日志「PTY 进程内模式已启用」
+- [ ] 4.4b GUI 终端面板点按（WebView 内容不进 uiautomator，需截图/人工；API 级已证）
