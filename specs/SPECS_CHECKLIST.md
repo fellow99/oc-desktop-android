@@ -42,7 +42,7 @@
 | M-206 | JS 搜索兜底（grep/glob） | [spec](./206-js-search/spec.md) | 🔶 Done（host 20261029） | oc-plugin-search；夹具用例全过 |
 | M-203 | 工作区选择器（SAF 导入制） | [spec](./203-plugin-workspace-picker/spec.md) | 🔶 Done（host 20261029） | 0007/0009 + 插件 RPC 实弹；SAF 实机随真机轮 |
 | M-205 | pnpm 插件（本工程新增） | [spec](./205-pnpm-plugin/spec.md) + [as-built](./205-pnpm-plugin/as-built.md) | 🔶 Done（host 20261029-2） | 五工具（run 平台证伪降级）；P0-M 冻结 |
-| M-111 | PTY（引入 node-pty，进程内 PersistentPty 后端） | [spec](./111-pty-integration/spec.md) + [plan](./111-pty-integration/plan.md) + [tasks](./111-pty-integration/tasks.md) + [test-cases](./111-pty-integration/test-cases.md) | 🔶 planned（方案稿） | 分阶段 M0 Spike→M1 引擎升级→M2 后端→M3 全功能→M4 真机；见 docs/111-PTY实现方案.md |
+| M-111 | PTY（引入 node-pty，进程内 PersistentPty 后端） | [spec](./111-pty-integration/spec.md) + [plan](./111-pty-integration/plan.md) + [tasks](./111-pty-integration/tasks.md) + [test-cases](./111-pty-integration/test-cases.md) | 🔶 **Done（M0/M1/M2）** | 引擎 26.13.0+node-pty；0012 解打桩；进程内守护 device 验证（logs/20261102-1,2）；M3 全功能/真机待 |
 
 ## 三、需求覆盖对照（本迭代 `000-scaffold`）
 
