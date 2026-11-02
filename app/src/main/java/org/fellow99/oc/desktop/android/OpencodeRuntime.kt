@@ -103,6 +103,10 @@ class OpencodeRuntime(private val context: Context) {
             // [3/6] 宿主能力（必须先于 start）
             step("[3/6] 注册宿主能力")
             HostCapabilities.registerAll(rt)
+            // PTY（111-pty-integration / M2）：预载 libpty_node.so（extractNativeLibs=false ⇒ 只能经 Android linker 按 soname 加载）
+            runCatching { System.loadLibrary("pty_node") }
+                .onFailure { Diagnostics.evidence(context, "loadLibrary(pty_node) 失败：${it.message}") }
+                .onSuccess { Diagnostics.evidence(context, "loadLibrary(pty_node) 预载成功") }
 
             // [4/6] 启动进程内 Node（bootstrap.js → payload/opencode-server.js）
             step("[4/6] 启动 Node 服务（进程内）")
@@ -176,6 +180,8 @@ class OpencodeRuntime(private val context: Context) {
         "OC_VERSION" to appVersion(context),
         "OC_HOST" to "127.0.0.1",
         "OC_NATIVE_LIB_DIR" to context.applicationInfo.nativeLibraryDir,
+        // PTY（111-pty-integration / M2）：进程内 PersistentPty 守护开关（opencode-server.js ⑤b 消费）
+        "OPENCODE_PTY_INPROCESS" to "1",
     )
 
     /** assets/payload 启动脚本 + assets/opencode-dist.tar.gz → filesDir（幂等）。 */
@@ -186,6 +192,9 @@ class OpencodeRuntime(private val context: Context) {
         copyAssetFile(context, "payload/lib/env.js", File(context.filesDir, "payload/lib/env.js"))
         copyAssetFile(context, "payload/lib/ready.js", File(context.filesDir, "payload/lib/ready.js"))
         copyAssetFile(context, "payload/lib/plugins.js", File(context.filesDir, "payload/lib/plugins.js"))
+        // PTY（111-pty-integration / M2）：node-pty 绑定 + 进程内持久终端守护
+        copyAssetFile(context, "payload/lib/node-pty.js", File(context.filesDir, "payload/lib/node-pty.js"))
+        copyAssetFile(context, "payload/lib/pty-inprocess.js", File(context.filesDir, "payload/lib/pty-inprocess.js"))
 
         // ② 载荷 tar.gz（MB 级；marker 版本一致时不拷贝，二次启动零拷贝；版本变化 → 重拷 + Node 重解包）
         val dist = File(context.filesDir, "opencode-dist")

@@ -23,3 +23,11 @@
 - [x] 3.7a assembleDebug：APK 含 libnode.so(26.13.0, 87.7MB) + libpty_node.so(71KB)；verify-runtime 全绿
 - [ ] 3.6 待：payload(bun) 重建 + smoke-node26 + regression（需 host node26 口径）
 - [ ] 3.7b 待：装机完整应用冒烟（需 payload 重建后）
+
+## M2 进程内 PersistentPty 后端（FR-111-004/005）— 代码落地
+- [x] 4.1 node-pty 适配 payload/lib/node-pty.js（soname dlopen + Proc 接口；M0 定稿）
+- [x] 4.2 进程内守护 payload/lib/pty-inprocess.js（inject 拦截 spawn→进程内 daemon + Unix socket JSON 帧协议 + createHandler）
+- [x] 4.3 opencode-server.js ⑤b 接线；env.js OPENCODE_PTY_INPROCESS=1；OpencodeRuntime preload+ensurePayload+buildEnv
+- [x] host 单测：createHandler 全 op（ping/own/create/list/write/rename/snapshot/read_rows/terminate/shutdown/unknown）PASS
+- [ ] 4.4 设备端终端面板可用性（需 payload bundle 重建 + 全应用运行）
+- [ ] 4.5 既有 e2e 回归（Node 26）

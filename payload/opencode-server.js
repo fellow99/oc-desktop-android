@@ -148,6 +148,16 @@ async function main() {
   // ⑤ serve 语义（D3：产品路径必须 --port 0，端口由 OS 分配）
   process.argv = ['node', 'opencode.mjs', 'serve', '--hostname', HOST, '--port', '0'];
 
+  // ⑤b PTY（111-pty-integration / M2）：进程内 PersistentPty 守护 + node-pty 绑定，须先于 bundle import。
+  if (process.env.OPENCODE_PTY_INPROCESS === '1') {
+    const ptyInprocess = require('./lib/pty-inprocess');
+    ptyInprocess.inject();
+    process.env.OPENCODE_NODE_PTY_PATH = path.join(__dirname, 'lib', 'node-pty.js');
+    log(`PTY 进程内模式已启用（inject + OPENCODE_NODE_PTY_PATH=${process.env.OPENCODE_NODE_PTY_PATH}）`);
+  } else {
+    log('PTY 进程内模式未启用（OPENCODE_PTY_INPROCESS!=1）');
+  }
+
   // ⑥ import stock bundle（D2）。失败 = 终态：写 FATAL 后交给 bootstrap 的兜底（不 process.exit）
   const entry = path.join(DIST_DIR, 'opencode.mjs');
   if (!fs.existsSync(entry)) throw new Error(`bundle 缺失：${entry}`);

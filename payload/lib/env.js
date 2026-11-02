@@ -31,6 +31,8 @@ function buildEnv(base, filesDir) {
   env.OPENCODE_CLIENT = 'desktop';
   env.OPENCODE_LOG_LEVEL = env.OPENCODE_LOG_LEVEL || 'info';
   env.OPENCODE_NODE_ASSETS_DIR = `${filesDir}/opencode-dist/assets`;
+  // PTY（111-pty-integration / M2）：进程内 PersistentPty 守护 + node-pty 绑定；OPENCODE_NODE_PTY_PATH 由 opencode-server.js ⑤b 注入
+  env.OPENCODE_PTY_INPROCESS = '1';
   env.NO_PROXY = '127.0.0.1,localhost,::1';
   env.no_proxy = env.NO_PROXY;
   // bash 工具要能找到 sh/toybox（§5.9：PATH 前置 /system/bin；不产生空尾项——POSIX 中空 PATH 项=当前目录）
