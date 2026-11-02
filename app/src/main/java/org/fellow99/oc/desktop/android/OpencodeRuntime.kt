@@ -175,6 +175,7 @@ class OpencodeRuntime(private val context: Context) {
         "OC_PAYLOAD_TAR" to "$filesDir/incoming/opencode-dist.tar.gz",
         "OC_VERSION" to appVersion(context),
         "OC_HOST" to "127.0.0.1",
+        "OC_NATIVE_LIB_DIR" to context.applicationInfo.nativeLibraryDir,
     )
 
     /** assets/payload 启动脚本 + assets/opencode-dist.tar.gz → filesDir（幂等）。 */

@@ -11,3 +11,15 @@
 - [x] 3.5 regression/verify-branding 引用；verify-runtime 增 node-pty 断言
 - [ ] 3.6 collect/smoke/verify/regression 全绿
 - [ ] 3.7 assembleDebug + APK 含 libnode.so+libpty_node.so + 装机冒烟
+
+## M0 Spike（FR-111-003）— ✅ PASS（真机 Mi MIX API26，20261102-1）
+- [x] S1 加载：libpty_node.so 进程内 dlopen（node v26.13.0 arch=arm64）
+- [x] S2 spawn sh：fork('/system/bin/sh') → pty=/dev/pts/0 真 PTY
+- [x] S3 交互：回环 + CRLF（echo PROBE_OK）
+- [x] S4 选型冻结：System.loadLibrary("pty_node") 预载 + Node process.dlopen(soname)
+- 证据：logs/20261102-1/PTY_SPIKE.md
+
+## M1 引擎升级更新
+- [x] 3.7a assembleDebug：APK 含 libnode.so(26.13.0, 87.7MB) + libpty_node.so(71KB)；verify-runtime 全绿
+- [ ] 3.6 待：payload(bun) 重建 + smoke-node26 + regression（需 host node26 口径）
+- [ ] 3.7b 待：装机完整应用冒烟（需 payload 重建后）
