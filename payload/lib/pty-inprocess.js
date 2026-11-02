@@ -188,7 +188,7 @@ function createHandler(ctx) {
       case 'write': {
         const s = sessions.get(request.id);
         if (!s) return error('no such terminal');
-        s.proc.write(Buffer.from(request.data_base64, 'base64').toString('utf8'));
+        s.proc.write(Buffer.from(request.data_base64, 'base64')); // 保留原始字节（勿经 utf8 往返，会损坏非 UTF-8 控制序列）
         return { type: 'ok' };
       }
       case 'resize': {
@@ -203,7 +203,7 @@ function createHandler(ctx) {
         const s = sessions.get(request.id);
         if (!s) return error('no such terminal');
         if (request.cols) { s.cols = request.cols; s.rows = request.rows; try { s.proc.resize(request.cols, request.rows); } catch {} }
-        if (request.data_base64) s.proc.write(Buffer.from(request.data_base64, 'base64').toString('utf8'));
+        if (request.data_base64) s.proc.write(Buffer.from(request.data_base64, 'base64')); // 原始字节
         return { type: 'ok' };
       }
       case 'rename': {

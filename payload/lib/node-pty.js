@@ -78,7 +78,10 @@ function spawn(file, args, opt = {}) {
       return { dispose: () => { exitListener = null; } };
     },
     write(data) {
-      try { fs.writeSync(term.fd, String(data)); } catch (_) { /* 已退出 */ }
+      try {
+        if (Buffer.isBuffer(data)) fs.writeSync(term.fd, data); // 键盘/粘贴可能含非 UTF-8 字节，保留原始字节
+        else fs.writeSync(term.fd, String(data));
+      } catch (_) { /* 已退出 */ }
     },
     resize(c, r) {
       try { native.resize(term.fd, c, r); } catch (_) { /* 已退出 */ }
