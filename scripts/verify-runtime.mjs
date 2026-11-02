@@ -277,3 +277,62 @@ if (problems.length > 0) fail()
 
 console.log('✓ ELF 门禁全过：ET_DYN · 无 PT_INTERP · EM_AARCH64 · SONAME=libnode.so · node::Start 导出 · 16KB 页对齐')
 console.log(`✓ 运行时锁值校验全过：node-bridge@${lock.bridge} + node-runtime@${lock.node}（arm64-v8a，= runtime.lock.json 锁值）`)
+
+/* ── ⑥ node-pty AAR：libpty_node.so 锁值 + ELF + DT_NEEDED libnode.so ────── */
+const ptyVer = lock.pty
+if (ptyVer && lock.libptyNodeSha256) {
+  function findPtyAar() {
+    const candidates = []
+    const gradleHome = process.env.GRADLE_USER_HOME || path.join(process.env.USERPROFILE || process.env.HOME || '', '.gradle')
+    const base = path.join(gradleHome, 'caches', 'modules-2', 'files-2.1', 'io.github.fellow99', 'node-pty', ptyVer)
+    if (existsSync(base)) {
+      for (const hash of readdirSync(base)) {
+        const dir = path.join(base, hash)
+        for (const name of readdirSync(dir)) if (name === `node-pty-${ptyVer}.aar`) candidates.push(path.join(dir, name))
+      }
+    }
+    return candidates.find(existsSync) ?? null
+  }
+  const ptyAar = findPtyAar()
+  if (!ptyAar) {
+    problems.push(`未找到 node-pty-${ptyVer}.aar（先 ./gradlew :app:assembleDebug）`)
+  } else {
+    console.log(`✓ PTY AAR：${ptyAar}`)
+    const ptyZip = readZip(ptyAar)
+    const libpty = ptyZip.get('jni/arm64-v8a/libpty_node.so')
+    if (!libpty) {
+      problems.push(`node-pty AAR 内缺 jni/arm64-v8a/libpty_node.so`)
+    } else {
+      const ptySha = sha256(libpty)
+      if (ptySha !== lock.libptyNodeSha256) problems.push(`libpty_node.so SHA-256 不符：期望 ${lock.libptyNodeSha256}，实测 ${ptySha}`)
+      else console.log(`✓ libpty_node.so SHA-256 = lock（${ptySha.slice(0, 16)}…，${libpty.length} B）`)
+      const ptyElf = parseElf(libpty)
+      if (ptyElf.type !== 3) problems.push(`libpty_node.so e_type=${ptyElf.type} ≠ ET_DYN(3)`)
+      if (ptyElf.machine !== 183) problems.push(`libpty_node.so e_machine=${ptyElf.machine} ≠ EM_AARCH64(183)`)
+      const ptySegs = ptyElf.segments()
+      if (ptySegs.some((s) => s.type === 3)) problems.push('libpty_node.so 存在 PT_INTERP')
+      if (!ptySegs.some((s) => s.type === 1)) problems.push('libpty_node.so 无 PT_LOAD')
+      else for (const l of ptySegs.filter((s) => s.type === 1)) if (l.align !== 0 && (l.align < 16384 || l.align % 16384 !== 0)) { problems.push(`libpty_node.so PT_LOAD p_align=${l.align} 非 16KB 对齐`); break }
+      // DT_NEEDED 必须含 libnode.so（由消费方 runtime 提供）；DT_NEEDED 的 d_val 是 .dynstr 内偏移
+      let needsLibnode = false
+      const dynT = ptyElf.dynamicTable()
+      const dyn = ptyElf.dynamic()
+      if (dynT) {
+        const readStr = (off) => { const e = libpty.indexOf(0, off); return libpty.subarray(off, e).toString('utf8') }
+        for (let at = dyn.offset; at + 16 <= dyn.offset + dyn.filesz; at += 16) {
+          const tag = Number(libpty.readBigUInt64LE(at))
+          if (tag === 0) break
+          if (tag === 1) {
+            const off = Number(libpty.readBigUInt64LE(at + 8))
+            if (readStr(dynT.strOff + off) === 'libnode.so') needsLibnode = true
+          }
+        }
+      }
+      if (!needsLibnode) problems.push('libpty_node.so DT_NEEDED 不含 libnode.so（配对消费失败）')
+      else console.log('✓ libpty_node.so DT_NEEDED 含 libnode.so（配对 runtime 提供）')
+
+    }
+  }
+  if (problems.length > 0) fail()
+  console.log(`✓ node-pty 锁值校验全过：node-pty@${ptyVer}（arm64-v8a，与 node-runtime 同版本）`)
+}

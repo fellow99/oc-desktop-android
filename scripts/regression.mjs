@@ -3,7 +3,7 @@
  * regression.mjs —— 回归基线四件套（规格 specs/109；规划 §11 Phase 4）。
  *
  *   ① 包体：app-debug.apk / app-release.apk（存在则核录）字节数与 SHA-256；
- *   ② 冒烟：复用 scripts/smoke-node24.mjs（--version/serve/health/UI/title/SSE）；
+ *   ② 冒烟：复用 scripts/smoke-node26.mjs（--version/serve/health/UI/title/SSE）；
  *   ③ 首启分解：取 docs/evidence 最近一轮 ui.log 时间戳差（解包/就绪耗时）；模拟器不可用时登记占位；
  *   ④ 载荷指纹：opencode-dist.tar.gz SHA-256 + manifest（version/baseline/plugins digest）。
  *
@@ -33,10 +33,10 @@ for (const variant of ['debug', 'release']) {
 }
 
 // ② 冒烟（fail-visible）
-const smoke = spawnSync(process.execPath, [path.join(root, 'scripts/smoke-node24.mjs')], { encoding: 'utf8' })
+const smoke = spawnSync(process.execPath, [path.join(root, 'scripts/smoke-node26.mjs')], { encoding: 'utf8' })
 const smokeOk = smoke.status === 0
-rows.push(`| smoke-node24 | ${smokeOk ? '全绿' : 'FAIL'} | ${(smoke.stdout + smoke.stderr).split('\n').filter((l) => l.includes('[smoke]')).slice(-3).join('；')} |`)
-if (!smokeOk) problems.push('smoke-node24 未全绿')
+rows.push(`| smoke-node26 | ${smokeOk ? '全绿' : 'FAIL'} | ${(smoke.stdout + smoke.stderr).split('\n').filter((l) => l.includes('[smoke]')).slice(-3).join('；')} |`)
+if (!smokeOk) problems.push('smoke-node26 未全绿')
 
 // ③ 载荷指纹
 const tarGz = path.join(root, 'app/src/main/assets/opencode-dist.tar.gz')

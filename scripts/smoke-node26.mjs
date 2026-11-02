@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * host 侧门禁（§7.3）：与设备同代 Node 跑一遍 serve 语义，全绿才允许进 APK。
+ * host 侧门禁（§7.3）：与设备同代 Node（目标引擎 node26） 跑一遍 serve 语义，全绿才允许进 APK。
  *
  *   1. `node opencode.mjs --version`
  *   2. `serve --hostname 127.0.0.1 --port 0`（OPENCODE_NODE_ASSETS_DIR 指向 dist assets）
  *   3. 断言：`server listening on …`；`GET /global/health` 200（Basic）；`GET /` 返回 UI html；
  *      `GET /event` 读到首个 SSE 事件
  *
- * 用法：node scripts/smoke-node24.mjs
+ * 用法：node scripts/smoke-node26.mjs
  */
 import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'

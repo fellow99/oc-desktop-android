@@ -17,9 +17,9 @@ const repo = path.resolve(root, process.env.OPENCODE_DIR ?? '../opencode')
 const target = process.env.OPENCODE_TARGET ?? 'linux-arm64'
 const nodeTarget = (process.env.OPENCODE_NODE_TARGET ?? '').trim()
 
-// 未显式指定 node24 即判失败（否则上游按默认 node 产出，与设备运行时 24.22.1 错位）
+// 未显式指定 node26 即判失败（否则上游按默认 node 产出，与设备运行时 26.13.0 错位）
 if (nodeTarget === '') {
-  console.error('✗ 必须显式设置 OPENCODE_NODE_TARGET=node24（对齐 libnode v24.22.1）')
+  console.error('✗ 必须显式设置 OPENCODE_NODE_TARGET=node26（对齐 libnode v26.13.0）')
   process.exit(2)
 }
 

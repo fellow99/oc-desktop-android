@@ -5,12 +5,14 @@ compileSdk = "36"
 minSdk = "24"
 targetSdk = "36"
 nodeBridge = "0.2.0"
-nodeRuntime = "24.22.1"
+nodeRuntime = "26.13.0"
+nodePty = "26.13.0"
 coroutines = "1.9.0"
 
 [libraries]
 node-bridge = { module = "io.github.fellow99:node-bridge", version.ref = "nodeBridge" }
 node-runtime = { module = "io.github.fellow99:node-runtime", version.ref = "nodeRuntime" }
+node-pty = { module = "io.github.fellow99:node-pty", version.ref = "nodePty" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 
 [plugins]

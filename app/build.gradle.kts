@@ -91,6 +91,8 @@ dependencies {
     // Dispatchers.Main（桥只带 coroutines-core；版本与桥对齐）
     implementation(libs.kotlinx.coroutines.android)
     // 引擎：只装 libnode.so（+ libc++_shared.so）；runtimeOnly —— 编译期零引擎符号
-    // 版本=Node 版本，单一事实源 aosp-node-runtime 仓 runtime.lock.json（active=24.22.1）
+    // 版本=Node 版本，单一事实源 aosp-node-runtime 仓 runtime.lock.json（active=26.13.0）
     runtimeOnly(libs.node.runtime)
+    // PTY：libpty_node.so 由进程内 Node 经 N-API 加载（D3）；与 node-runtime 必须逐字同版本
+    runtimeOnly(libs.node.pty)
 }

@@ -9,7 +9,7 @@
  *   ④ 关于页字符串含非官方声明（G6）；
  *   ⑤ 应用面资源（res/）无 「OpenCode」 指称残留（上游包名/代码路径不在断言范围）；
  *   ⑥ README.md 含非官方声明。
- * UI document.title 判据由补丁 0010 + smoke-node24（服务首页 title 断言）承担。
+ * UI document.title 判据由补丁 0010 + smoke-node26（服务首页 title 断言）承担。
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
