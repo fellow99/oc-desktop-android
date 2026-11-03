@@ -50,3 +50,6 @@ build/
 plugins/oc-plugin-pnpm/pnpm.cjs
 plugins/oc-plugin-pnpm/worker.js
 plugins/oc-plugin-pnpm/pnpmrc
+
+# CodeGraph 索引
+.codegraph/
