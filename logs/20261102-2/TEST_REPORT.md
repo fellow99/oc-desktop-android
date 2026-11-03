@@ -25,13 +25,29 @@
 
 | 用例 | 状态 | 证据 |
 |---|---|---|
-| TC-301 终端可用态（capabilities） | ✅ | `POST /api/experimental/session/{sid}/terminal` 返回 `pty_persistent_1` running、真实 pid |
-| TC-302 终端 sh 输出 | ✅ | list 显示 `output.tail=44`（真实 shell 输出） |
+| TC-301 终端可用态（capabilities） | ✅ | 官方 API create 返回 running 真 pid；**GUI 终端面板实测可用**（截图） |
+| TC-302 终端 sh 输出 | ✅ | API list `output.tail>0`；**GUI 面板提示符 `lithium:/data/data/…`、`pwd`/`echo hello_pty_ok` 正确回显与执行**（截图 term14） |
 | TC-304 无外部 ELF spawn 反证 | ✅ | 进程内守护（inject 拦截 spawn→进程内 daemon+Unix socket），PATH 无 `opencode-pty` 仍工作 |
 | TC-305 能力降级诚实 | ✅ | snapshot/read_rows/rename 按能力如实（含 `supports("rename")`）；未宣称跨重启持久化 |
 | 服务端日志 | ✅ | server.log：「PTY 进程内模式已启用（inject + OPENCODE_NODE_PTY_PATH=…/node-pty.js）」 |
 
 > 补充：构建配置由「ohos 打桩硬禁用」改为 0012 补丁 `android` 条件（`#pty`/`#persistent-pty-binary` → node 变体）；修复守护 socket 超 AF_UNIX sun_path(108B) 的 `listen EINVAL`。
+
+### 三bis、GUI 终端面板白屏/断连根治（systematic-debugging + CDP 取证，20261103）
+
+真机 终端面板原为**白屏**；逐步取证定位并修复 3 个叠加根因（提交 `ed1df23`→`1576e88`）：
+
+| # | 根因 | 现象 | 修复 |
+|---|---|---|---|
+| 1 | node-pty `fork` 传 `uid/gid=0`，非 root 应用 `setgid(0)` EPERM → pty.cc `_exit(1)`，shell 从未 exec（M0 的"echo"仅为 PTY 行规回显，误报） | 无提示符/打字无反应 | `fork` 改 `uid/gid=-1` |
+| 2 | `fs.createReadStream(null,{fd})` 在非阻塞 PTY fd 上遇 `EAGAIN` 即终止 → 输出停流 | 命令输出不回流 | 改 `tty.ReadStream(fd)`（node-pty 原样） |
+| 3 | 终端 shell 用 `/bin/sh`（Android 无，仅 `/system/bin/sh`）→ `execvp(3) failed` | shell 起不来 | 注入 `OC_SHELL_FALLBACK=/system/bin/sh`（0006 补丁 fallback 读它；env.js + buildEnv 双处） |
+| 4 | 进程内守护 live 输出帧缺官方 daemon 必需的 4B 长度前缀 → `daemon.ts` 帧解码错位 → 流报错 → WS 关闭 | **"Terminal disconnected"** | 输出帧补 `[len][0x00][start8][end8][data]` |
+| 5 | `terminate` 未从 sessions 删除 | 删除后 tab 残留 | terminate 删除会话 |
+
+**验证（截图 term12–14）**：终端面板显示提示符 `lithium:/data/data/org.fellow99.oc.OCDesktopAndroid/files/…`，
+输入 `pwd` → 工作区路径，`echo hello_pty_ok` → `hello_pty_ok`，换行/光标均正常 ⇒ **完全交互**。
+（注：旧 daemon 遗留的"终端 1"是 stale tab，应用重启即清净。）
 
 ## 四、端到端（设备，Node 26 下既有能力不退化，FR-111-007）
 
@@ -63,5 +79,6 @@
 ## 六、结论与残余
 
 - **111-pty-integration 核心（PTY 点亮）** 实现 + 设备验证完成；M2 官方终端后端可用，能力矩阵 D3 由 ❌ → ✅（device）。
-- 残余/open：GUI 终端面板的 UI 点按级验证（WebView 内容不进 uiautomator，需人工/截图）；M3（快照/read_rows 全量对齐）与 M4（真机 PTY 全项）列入后续。
+- **GUI 终端面板已实测可用（20261103）**：经 systematic-debugging + CDP 取证修复 5 个根因（shell 路径/uid-gid/EAGAIN/输出帧长度前缀/terminate），截图 term12–14 证实提示符 + `pwd`/`echo` 全交互。
+- 残余/open：M3（快照 checkpoint/read_rows 全量对齐、多 attachment 角色、跨重启 handoff）与 M4（多机型 PTY 全项/resize/长时）列入后续。
 - 凭据：key 实值 0 落盘；扫描见 C6 自检（TC-501）。

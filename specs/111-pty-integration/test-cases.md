@@ -117,10 +117,10 @@
 
 ## 执行记录（20261102 真机 Mi MIX API26；凭据实值 0 落盘）
 
-> 完整证据见 `logs/20261102-2/TEST_REPORT.md`。状态 = ```PASS``` 表示已执行通过；未执行的（M3/M4 及 GUI 面板点按）留空。
+> 完整证据见 `logs/20261102-2/TEST_REPORT.md`（含 §三bis GUI 终端面板修复）。
 
 - TC-101 PASS · TC-102 PASS · TC-103 PASS · TC-201 PASS · TC-202 PASS · TC-203 PASS
-- TC-301 PASS · TC-302 PASS · TC-304 PASS · TC-305 PASS
+- TC-301 PASS · TC-302 PASS · TC-304 PASS · TC-305 PASS（且 **GUI 终端面板实测可用**：提示符 + `pwd`/`echo` 交互，20261103）
 - TC-401 PASS · TC-402 PASS · TC-403 PASS · TC-404 PASS · TC-405 PASS · TC-406 PASS
 - TC-501 PASS（全库扫描凭据实值 0 命中）· TC-502 PASS
-- 未执行：TC-303（resize 旋转级，随设备/M3）、GUI 终端面板点按（WebView 不进 uiautomator，需人工/截图）
+- 未执行：TC-303（resize 旋转级，随设备/M3）；GUI 面板点按已由 CDP + 截图验证（终端面板可用，见 TEST_REPORT §三bis）
