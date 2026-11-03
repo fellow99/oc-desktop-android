@@ -38,3 +38,11 @@
 - [x] M1 载荷重建：build-opencode(node26, bun1.4.4) → collect → smoke-node26 全绿 → regression 全绿 → APK 打包载荷
 - [x] **设备验证 ✅**：官方 API POST create → `pty_persistent_1` running pid real；list 显示 output.tail=44（真 shell 输出）；服务端日志「PTY 进程内模式已启用」
 - [ ] 4.4b GUI 终端面板点按（WebView 内容不进 uiautomator，需截图/人工；API 级已证）
+
+## 真机终端输入缺陷修复（systematic-debugging；20261103）
+- 现象：Web UI 终端面板打字/命令不回显；无 shell 提示符。
+- 根因1（shell 未 exec）：node-pty fork 传 uid/gid=0 ⇒ 子进程 setgid(0) 在非 root 应用 EPERM ⇒
+  node-pty pty.cc:426 `perror("setgid(2) failed."); _exit(1)` ⇒ sh 从未运行（M0 的"echo"只是 PTY 行规回显，误报）。→ fork 改 uid=gid=-1（跳过 setgid/setuid）。
+- 根因2（输出停流）：fs.createReadStream(null,{fd}) 在非阻塞 PTY fd 上遇 EAGAIN 即终止，后续输出不再读。
+  → 改用 tty.ReadStream(term.fd)（node-pty 原样，内部处理 EAGAIN）。
+- 证据：logcat `read 16B(提示符)→write 18B(echo)→read 50B(回显+结果+新提示符)`；shell 提示符 `lithium:/data $` 显示。

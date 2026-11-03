@@ -46,7 +46,7 @@ function spawn(file, args, opt = {}) {
     opt.cwd || process.cwd(),
     cols,
     rows,
-    0, 0, true, '', // utf8=true, helperPath=''（无 helper）
+    -1, -1, true, '', // uid/gid=-1（跳过 setgid/setuid：非 root 应用 setgid(0) 会 EPERM 并被 node-pty _exit(1)，shell 永不 exec——111-PTY 真机定位）
     (code, signal) => {
       if (exitListener) {
         const f = exitListener;
@@ -56,8 +56,11 @@ function spawn(file, args, opt = {}) {
     },
   );
 
-  // 主端读：PTY 输出（含回显/转义流）。错误静默（EIO 在退出时常见）。
-  const reader = fs.createReadStream(null, { fd: term.fd });
+  // 主端读：PTY 输出（含回显/转义流）。
+  // ⚠ 必须用 tty.ReadStream：fs.createReadStream(null,{fd}) 在非阻塞 PTY fd 上遇 EAGAIN 即终止，
+  //   导致后续输出不再读取（111-PTY 真机定位）。tty.ReadStream 按 node-pty 原样，内部正确处理 EAGAIN。
+  const tty = require('tty');
+  const reader = new tty.ReadStream(term.fd);
   reader.setEncoding('utf8');
   reader.on('data', (chunk) => {
     const s = String(chunk);
@@ -65,7 +68,9 @@ function spawn(file, args, opt = {}) {
       try { cb(s); } catch (_) { /* 监听器自管异常 */ }
     }
   });
-  reader.on('error', () => {});
+  reader.on('error', () => {
+    // EAGAIN/EIO 是 TTY 常态：tty.ReadStream 内部处理并保持读取，勿在此终止。
+  });
 
   return {
     pid: term.pid,
