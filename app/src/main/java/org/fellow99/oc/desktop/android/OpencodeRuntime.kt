@@ -182,6 +182,8 @@ class OpencodeRuntime(private val context: Context) {
         "OC_NATIVE_LIB_DIR" to context.applicationInfo.nativeLibraryDir,
         // PTY（111-pty-integration / M2）：进程内 PersistentPty 守护开关（opencode-server.js ⑤b 消费）
         "OPENCODE_PTY_INPROCESS" to "1",
+        // 终端 shell 兜底：Android 无 /bin/sh，设备侧可执行的是 /system/bin/sh（0006 补丁 fallback() 读它）
+        "OC_SHELL_FALLBACK" to "/system/bin/sh",
     )
 
     /** assets/payload 启动脚本 + assets/opencode-dist.tar.gz → filesDir（幂等）。 */

@@ -46,3 +46,13 @@
 - 根因2（输出停流）：fs.createReadStream(null,{fd}) 在非阻塞 PTY fd 上遇 EAGAIN 即终止，后续输出不再读。
   → 改用 tty.ReadStream(term.fd)（node-pty 原样，内部处理 EAGAIN）。
 - 证据：logcat `read 16B(提示符)→write 18B(echo)→read 50B(回显+结果+新提示符)`；shell 提示符 `lithium:/data $` 显示。
+
+## 终端白屏/断连根因修复（systematic-debugging + CDP 取证；20261103）
+真机终端面板白屏 → 逐步定位并修复 3 个根因（均已截图/CDP/logcat 验证）：
+1. **shell 路径**：终端用 `/bin/sh`（Android 无此路径，仅 `/system/bin/sh`）→ `execvp(3) failed`。
+   修复：env 注入 `OC_SHELL_FALLBACK=/system/bin/sh`（0006 补丁 fallback() 读它；hos 一直有、Android 漏了）。
+2. **输出帧缺长度前缀**：进程内守护的 live 输出帧少了官方 daemon 必需的 4B 大端长度前缀
+   （`[len][0x00][start8][end8][data]`），导致 daemon.ts 客户端帧解码错位 → 流报错 → WS 关闭 → "Terminal disconnected"。
+   修复：输出帧加长度前缀（此前 CDP 测试因 cursor=0 走 replay 掩盖了该 bug）。
+3. **terminate 未删列表**：remove 后 terminal 仍留在 sessions → tab 残留堆积。修复：terminate 删 sessions。
+验证：真机终端显示提示符 `lithium:/data/data/...`，`pwd`→工作区路径，`echo hello_pty_ok`→`hello_pty_ok`，完全交互。

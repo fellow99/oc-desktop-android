@@ -122,11 +122,17 @@ function handleConnection(socket, daemon) {
           attachmentID: req.request.attachment_id || crypto_random(),
           role: req.request.role || 'observer',
           onOutput(start, end, data) {
-            const frame = Buffer.alloc(17 + data.length);
-            frame.writeUInt8(0, 0);
-            frame.writeBigUInt64BE(BigInt(start), 1);
-            frame.writeBigUInt64BE(BigInt(end), 9);
-            data.copy(frame, 17);
+            // ⚠ 输出帧必须与官方 daemon 一致：4B 大端长度 + [0x00][start(8)][end(8)][data]。
+            // daemon.ts 的 decoder 按长度前缀切帧；缺长度前缀会使客户端帧解码错位 → 流报错 → WS 关闭
+            // → 终端显示 “Terminal disconnected”（111-PTY 真机定位）。
+            const payload = Buffer.alloc(17 + data.length);
+            payload.writeUInt8(0, 0);
+            payload.writeBigUInt64BE(BigInt(start), 1);
+            payload.writeBigUInt64BE(BigInt(end), 9);
+            data.copy(payload, 17);
+            const frame = Buffer.alloc(4 + payload.length);
+            frame.writeUInt32BE(payload.length, 0);
+            payload.copy(frame, 4);
             try { socket.write(frame); } catch {}
           },
           onExit(s, exitCode) { try { socket.write(encode({ type: 'exited', exit_code: exitCode, final_offset: s.tail })); } catch {} },
@@ -228,6 +234,7 @@ function createHandler(ctx) {
         const s = sessions.get(request.id);
         if (!s) return error('no such terminal');
         try { s.proc.kill('SIGHUP'); } catch {}
+        sessions.delete(request.id); // remove 需真正从列表删除（否则 UI tab 残留/已退出项堆积）
         return { type: 'ok' };
       }
       default:
