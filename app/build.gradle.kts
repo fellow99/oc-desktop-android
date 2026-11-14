@@ -20,11 +20,11 @@ val keystoreProps = Properties().apply {
 }
 
 android {
-    namespace = "org.fellow99.oc.desktop.android"
+    namespace = "top.fellow99.oc.OCDesktopAndroid"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "org.fellow99.oc.OCDesktopAndroid"
+        applicationId = "top.fellow99.oc.OCDesktopAndroid"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 20205

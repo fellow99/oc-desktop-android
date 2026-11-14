@@ -1,7 +1,7 @@
 # 013 — 品牌化（Android Edition）功能规格（as-built）
 
 > **Module:** 013-branding ｜ **Status:** Implemented ｜ **Last Updated:** 2026-11-01
-> **应用:** OC Desktop Android / `org.fellow99.oc.OCDesktopAndroid`
+> **应用:** OC Desktop Android / `top.fellow99.oc.OCDesktopAndroid`
 > **上游基线:** opencode v2.2.5（`9bbb8ce18c`）
 > **父规格:** [`../../specs/013-branding/spec.md`](../../specs/013-branding/spec.md)（父工程公共品牌化）
 > **证据:** 补丁 `0010`、`scripts/verify-branding.mjs`、`scripts/smoke-node24.mjs`、`app/src/main/res/values/strings.xml`、`app/src/main/AndroidManifest.xml`

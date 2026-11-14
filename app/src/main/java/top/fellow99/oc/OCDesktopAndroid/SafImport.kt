@@ -1,4 +1,4 @@
-package org.fellow99.oc.desktop.android
+package top.fellow99.oc.OCDesktopAndroid
 
 import android.content.Context
 import android.net.Uri
