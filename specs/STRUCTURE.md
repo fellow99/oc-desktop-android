@@ -17,7 +17,7 @@ oc-desktop-android/
 ├── .gitignore                     # Android 模板 + keystore.properties + 载荷产物
 │
 ├── app/                           # Android 宿主（唯一模块 :app）
-│   ├── build.gradle.kts           # applicationId org.fellow99.oc.OCDesktopAndroid；v2.2.5(20205)；minSdk 24/target 36；
+│   ├── build.gradle.kts           # applicationId top.fellow99.oc.OCDesktopAndroid；v2.2.5(20205)；minSdk 24/target 36；
 │   │                              #   abiFilters arm64-v8a；payload 脚本同步任务（→ assets/payload/）；依赖双包
 │   ├── proguard-rules.pro
 │   └── src/main/
@@ -25,7 +25,7 @@ oc-desktop-android/
 │       ├── res/xml/network_security_config.xml   # 仅 127.0.0.1/localhost 放行明文（D4/P0-D）
 │       ├── res/values/strings.xml
 │       ├── assets/payload/        # ← 生成：payload/ 启动脚本（gradle syncPayloadScripts 任务拷入）
-│       └── java/org/fellow99/oc/desktop/android/
+│       └── java/top/fellow99/oc/OCDesktopAndroid/
 │           ├── App.kt             # Application：全局 Context 持有
 │           ├── MainActivity.kt    # 加载页/错误页/WebView 壳；导航围栏；clearHistory；返回键策略
 │           ├── OpencodeRuntime.kt # 六步启动编排（§4.2）+ D9 环境装配 + marker/探活双判据
@@ -65,7 +65,7 @@ oc-desktop-android/
 ## 设备侧运行时沙箱布局（filesDir）
 
 ```
-<filesDir>/                              # /data/user/0/org.fellow99.oc.OCDesktopAndroid/files
+<filesDir>/                              # /data/user/0/top.fellow99.oc.OCDesktopAndroid/files
 ├── connection.json                      # 连接密码（MODE_PRIVATE，105-auth）
 ├── node-bridge/                         # 桥库自管：payload(bootstrap/host/selfcheck) + node_bridge.log + app.log
 ├── payload/                             # 本工程启动脚本（Kotlin 从 assets 拷入）

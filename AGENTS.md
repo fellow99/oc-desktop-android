@@ -12,7 +12,7 @@
 
 | 项 | 值 |
 |---|---|
-| 应用名 / 包名 | **OC Desktop Android** / `org.fellow99.oc.OCDesktopAndroid` |
+| 应用名 / 包名 | **OC Desktop Android** / `top.fellow99.oc.OCDesktopAndroid` |
 | 版本 | `2.2.5` / `versionCode 20205` |
 | 目标设备 | 平板 / 折叠屏 / 桌面窗口优先（phone 可用，不做专属设计） |
 | 上游基线 | opencode **v2.2.5**（`9bbb8ce18c` / `Branch_v2.2.5`） |
@@ -54,7 +54,7 @@ node scripts/smoke-node24.mjs
 
 # ③ 装机与启动
 adb install -r app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -n org.fellow99.oc.OCDesktopAndroid/.MainActivity
+adb shell am start -n top.fellow99.oc.OCDesktopAndroid/.MainActivity
 ```
 
 - CI：`v*` tag 触发 GitHub Actions 构建 debug APK 并发布 GitHub Release。

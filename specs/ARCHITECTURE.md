@@ -5,7 +5,7 @@
 ## 1. 进程与模块总览
 
 ```
-┌─ APK（OC Desktop Android / org.fellow99.oc.OCDesktopAndroid）────────────────┐
+┌─ APK（OC Desktop Android / top.fellow99.oc.OCDesktopAndroid）────────────────┐
 │ app 模块（MainActivity，singleTask，configChanges 自理）                     │
 │  ┌─ Kotlin 宿主（app/src/main/java/…/）───────────────────────────┐         │
 │  │ App.kt（全局 Context）                                          │         │

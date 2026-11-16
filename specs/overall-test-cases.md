@@ -54,7 +54,7 @@ node scripts/collect-opencode.mjs && node scripts/smoke-node24.mjs
 # 构建/装机/启动
 ./gradlew :app:assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -n org.fellow99.oc.OCDesktopAndroid/org.fellow99.oc.desktop.android.MainActivity
+adb shell am start -n top.fellow99.oc.OCDesktopAndroid/top.fellow99.oc.OCDesktopAndroid.MainActivity
 # 服务端判据（port 见 run-as .../files/payload/server.ready.json；pwd 见 connection.json，勿外传）
 adb forward tcp:<port> tcp:<port>
 curl -u opencode:<pwd> http://127.0.0.1:<port>/global/health

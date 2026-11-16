@@ -45,7 +45,7 @@
 | 4 | 进程内守护 live 输出帧缺官方 daemon 必需的 4B 长度前缀 → `daemon.ts` 帧解码错位 → 流报错 → WS 关闭 | **"Terminal disconnected"** | 输出帧补 `[len][0x00][start8][end8][data]` |
 | 5 | `terminate` 未从 sessions 删除 | 删除后 tab 残留 | terminate 删除会话 |
 
-**验证（截图 term12–14）**：终端面板显示提示符 `lithium:/data/data/org.fellow99.oc.OCDesktopAndroid/files/…`，
+**验证（截图 term12–14）**：终端面板显示提示符 `lithium:/data/data/top.fellow99.oc.OCDesktopAndroid/files/…`，
 输入 `pwd` → 工作区路径，`echo hello_pty_ok` → `hello_pty_ok`，换行/光标均正常 ⇒ **完全交互**。
 （注：旧 daemon 遗留的"终端 1"是 stale tab，应用重启即清净。）
 

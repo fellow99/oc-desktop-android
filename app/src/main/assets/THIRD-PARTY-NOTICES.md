@@ -1,6 +1,6 @@
 # THIRD-PARTY-NOTICES
 
-OC Desktop Android（`org.fellow99.oc.OCDesktopAndroid`）随包分发以下第三方组件，本文件是其许可清单（规划 §13 G3）。本应用与 opencode 团队无隶属关系（非官方第三方移植）。
+OC Desktop Android（`top.fellow99.oc.OCDesktopAndroid`）随包分发以下第三方组件，本文件是其许可清单（规划 §13 G3）。本应用与 opencode 团队无隶属关系（非官方第三方移植）。
 
 | 组件 | 版本 | 许可 | 来源 |
 |---|---|---|---|
