@@ -6,7 +6,7 @@
 #       workflow_dispatch 手动触发（仅构建验证，不发布）
 # 签名：secrets 可选注入（KEYSTORE_BASE64 / KEYSTORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD）；
 #       未配置时回退 debug 签名 APK（可直接安装）。签名材料零入库（keystore.properties / *.keystore 已 gitignore）。
-# 引擎：io.github.fellow99:node-bridge:0.2.0 + node-runtime:24.22.1 直接解析自 Maven Central（settings.gradle.kts 的
+# 引擎：io.github.fellow99:node-bridge:0.2.0 + node-runtime:26.13.0 直接解析自 Maven Central（settings.gradle.kts 的
 #       mavenLocal() 在 CI 为空目录，顺位落到 mavenCentral()）。
 name: build-release
 
@@ -35,11 +35,11 @@ jobs:
       - name: 检出本仓库
         uses: actions/checkout@v4
 
-      - name: 检出上游 opencode（锁定基线 a517687fde / Branch_v2.1.2）
+      - name: 检出上游 opencode（锁定基线 6f0514052a / Branch_v2.4.1）
         uses: actions/checkout@v4
         with:
           repository: anomalyco/opencode
-          ref: a517687fde98a7329ada3ae644a01a9fc6c4e99e
+          ref: 6f0514052a3c859894ad01bb14cc14dda1e44b96
           path: upstream-opencode
           # 必须完整对象集：apply-patches 的 `rev-parse --short`（auto 长度）基线守卫
           # 依赖与本机一致的 abbrev 长度；shallow 对象集会缩短长度导致误杀。
@@ -137,8 +137,8 @@ jobs:
         with:
           name: OC Desktop Android ${{ github.ref_name }}
           body: >
-            自动构建产物 · 引擎 node-runtime 24.22.1（arm64-v8a）·
-            上游 opencode v2.1.2（基线 a517687fde）·
+            自动构建产物 · 引擎 node-runtime 26.13.0（arm64-v8a）·
+            上游 opencode v2.4.1（基线 6f0514052a）·
             校验请比对附件 .sha256。
           files: |
             dist/*.apk

@@ -7,7 +7,7 @@
  *       打印 manifest JSON（schema/version/tarSha256/files/bytes）
  *
  * 纪律：
- *   · 基线守卫：../opencode HEAD 必须 = 锁定基线 9bbb8ce18c（Branch_v2.2.5，tag v2.2.5）；
+ *   · 基线守卫：../opencode HEAD 必须 = 锁定基线 6f0514052a（Branch_v2.4.1，tag v2.4.1）；
  *     `--force` 可跳过（仅诊断，禁止用于交付）；
  *   · `--check`：只校验源与基线，不产出；
  *   · 不裁剪 assets（P0-C/K 结论出来前，wasm 资产一律随包——JIT 主线依赖 WASM）；
@@ -33,8 +33,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const repo = path.resolve(root, process.env.OPENCODE_DIR ?? '../opencode')
 const dist = path.join(repo, 'packages/cli/dist-node')
 const outDir = path.join(root, 'app/src/main/assets')
-const BASELINE = process.env.EXPECTED_BASELINE ?? '9bbb8ce18c'
-const VERSION = '2.2.5'
+const BASELINE = process.env.EXPECTED_BASELINE ?? '6f0514052a'
+const VERSION = '2.4.1'
 
 // ── 基线守卫 ─────────────────────────────────────────────────────────────────
 function gitHead(dir) {

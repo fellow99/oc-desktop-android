@@ -1,0 +1,104 @@
+diff --git a/packages/cli/vite.node.config.ts b/packages/cli/vite.node.config.ts
+--- a/packages/cli/vite.node.config.ts
++++ b/packages/cli/vite.node.config.ts
+@@ -116,7 +116,7 @@
+       replacement: path.join(path.dirname(createRequire(import.meta.url).resolve("ws/package.json")), "wrapper.mjs"),
+     },
+   ],
+-  conditions: ["ohos", "node"],
++  conditions: ["android", "ohos", "node"],
+ }
+ 
+ const output = (entryFileNames: string, banner?: string) => ({
+@@ -289,7 +289,7 @@
+       FFF_LIBC: input.target.platform === "linux" ? JSON.stringify("gnu") : "undefined",
+       "process.env.WS_NO_BUFFER_UTIL": JSON.stringify("1"),
+     },
+-    ssr: { noExternal: true, resolve: { conditions: ["ohos", "node"] } },
++    ssr: { noExternal: true, resolve: { conditions: ["android", "ohos", "node"] } },
+     build: {
+       ssr: "src/node/index.ts",
+       target: process.env.OPENCODE_NODE_TARGET ?? "node26",
+diff --git a/packages/core/package.json b/packages/core/package.json
+--- a/packages/core/package.json
++++ b/packages/core/package.json
+@@ -38,6 +38,7 @@
+     },
+     "#pty": {
+       "workerd": "./src/pty/pty.workerd.ts",
++      "android": "./src/pty/pty.android.ts",
+       "ohos": "./src/pty/pty.ohos.ts",
+       "bun": "./src/pty/pty.bun.ts",
+       "node": "./src/pty/pty.node.ts",
+@@ -49,6 +50,7 @@
+     },
+     "#persistent-pty-binary": {
+       "workerd": "./src/persistent-pty/binary.workerd.ts",
++      "android": "./src/persistent-pty/binary.node.ts",
+       "ohos": "./src/persistent-pty/binary.ohos.ts",
+       "bun": "./src/persistent-pty/binary.bun.ts",
+       "node": "./src/persistent-pty/binary.node.ts",
+diff --git a/packages/core/src/pty/pty.android.ts b/packages/core/src/pty/pty.android.ts
+new file mode 100644
+index 0000000000..a9c4a88744
+--- /dev/null
++++ b/packages/core/src/pty/pty.android.ts
+@@ -0,0 +1,58 @@
++/**
++ * Android (`android`) variant of `#pty`.
++ *
++ * `packages/core/package.json` maps the `android` condition here and the CLI build puts `"android"`
++ * ahead of `"node"` in `resolve.conditions`.
++ *
++ * Why not `pty.node.ts` directly: that module resolves `@lydell/node-pty` **at import time**
++ * (`const pty = createRequire(import.meta.url)(...)`). The Android payload is built for
++ * `linux-arm64`, so its node-pty copy is the linux one; anyone running that bundle on another host
++ * platform (the Windows build machine running `scripts/smoke-node26.mjs`) would abort the whole
++ * bundle import — `@lydell/node-pty-linux-arm64/lib/index.js` requires `./windowsTerminal` when
++ * `process.platform === "win32"`, and that file only exists in the win32 package. The same eager
++ * load also turns a missing/ABI-mismatched native module on the device into "server cannot start"
++ * instead of "terminal unavailable".
++ *
++ * So this variant keeps the exact `pty.node.ts` behaviour but defers the native load to the first
++ * `spawn()` call. Everything else (types, error surface) is identical; a load failure now fails the
++ * terminal that asked for it, which is the same self-gating contract the ohos stub uses.
++ */
++import { createRequire } from "node:module"
++import type { spawn as nodeSpawn } from "@lydell/node-pty"
++import type { Disp, Opts, Proc } from "./pty.js"
++
++export type { Disp, Exit, Opts, Proc } from "./pty.js"
++
++const require = createRequire(import.meta.url)
++
++let cached: { spawn: typeof nodeSpawn } | undefined
++
++function backend() {
++  if (cached) return cached
++  cached = require(process.env.OPENCODE_NODE_PTY_PATH ?? "@lydell/node-pty") as { spawn: typeof nodeSpawn }
++  return cached
++}
++
++function spawnPty(file: string, args: string[], opts: Opts): Proc {
++  const proc = backend().spawn(file, args, opts)
++  return {
++    pid: proc.pid,
++    onData(listener) {
++      return proc.onData(listener)
++    },
++    onExit(listener) {
++      return proc.onExit(listener)
++    },
++    write(data) {
++      proc.write(data)
++    },
++    resize(cols, rows) {
++      proc.resize(cols, rows)
++    },
++    kill(signal) {
++      proc.kill(signal)
++    },
++  }
++}
++
++export { spawnPty as spawn }
