@@ -21,11 +21,11 @@ index f9a06a0f13..e6993f3b81 100644
      clearAuthToken()
 diff --git a/packages/app/src/runtime/android/back.ts b/packages/app/src/runtime/android/back.ts
 new file mode 100644
-index 0000000000..8fda43c679
+index 0000000000..991af32e6d
 --- /dev/null
 +++ b/packages/app/src/runtime/android/back.ts
-@@ -0,0 +1,75 @@
-+// Android 硬件返回接线（v2.2.5 补丁 0011）。
+@@ -0,0 +1,77 @@
++// Android 硬件返回接线（v2.4.1 补丁 0011）。
 +//
 +// 宿主在硬件返回时 evaluateJavascript("window.__ocAndroidBack()")。Web 侧按优先级消费：
 +//   1. 打开的移动抽屉/弹层（corvu）→ 关闭
@@ -49,13 +49,14 @@ index 0000000000..8fda43c679
 +  return () => handlers.delete(handler)
 +}
 +
-+/** corvu 移动抽屉/弹层的可见遮罩；存在即代表有打开的浮层。 */
++/**
++ * corvu 移动抽屉的遮罩。遮罩由 portal 渲染在内容**同级**，只有
++ * `[data-slot="mobile-drawer-overlay"]` 这一种选择器能稳定命中；存在且可见即代表有打开的浮层。
++ */
 +function openOverlays(): Element[] {
-+  return Array.from(
-+    document.querySelectorAll<HTMLElement>(
-+      '[data-slot="mobile-drawer-overlay"], [data-slot="mobile-panel"] [data-corvu-overlay]',
-+    ),
-+  ).filter((el) => el.offsetParent !== null || el.getClientRects().length > 0)
++  return Array.from(document.querySelectorAll<HTMLElement>('[data-slot="mobile-drawer-overlay"]')).filter(
++    (el) => el.offsetParent !== null || el.getClientRects().length > 0,
++  )
 +}
 +
 +/** 关闭打开的移动抽屉/弹层。优先点遮罩（corvu 标准关闭路径），必要时补发 Escape。 */
@@ -88,8 +89,9 @@ index 0000000000..8fda43c679
 +  for (const handler of Array.from(handlers).reverse()) {
 +    try {
 +      if (handler()) return true
-+    } catch {
-+      // 单个处理器异常不应阻断后续处理器
++    } catch (error) {
++      // 单个处理器异常不应阻断后续处理器，但要留痕（空 catch 是禁例）。
++      console.warn("[oc-desktop] android back handler failed", error)
 +    }
 +  }
 +  return false
@@ -129,7 +131,7 @@ index fa9b866dce..9919947eda 100644
  
    const timeline = createSessionTimelineInteraction(session, conversationVisible)
 diff --git a/packages/app/src/settings/shell.tsx b/packages/app/src/settings/shell.tsx
-index 455bbd534d..52ba1c6b31 100644
+index 455bbd534d..b946d144e6 100644
 --- a/packages/app/src/settings/shell.tsx
 +++ b/packages/app/src/settings/shell.tsx
 @@ -30,6 +30,7 @@ import { SettingsNavigation, SettingsPanel, type SettingsNavGroup } from "./navi
@@ -140,16 +142,26 @@ index 455bbd534d..52ba1c6b31 100644
  import { settingsViewRedirect } from "./route"
  import { pageIcons, pageLabels } from "./pages"
  import { PluginSettingsPages } from "@/runtime/plugin/settings-page-view"
-@@ -84,6 +85,22 @@ export function SettingsScreen() {
+@@ -84,6 +85,32 @@ export function SettingsScreen() {
      onCleanup(surface.search.attach(root!))
    })
    createEffect(() => surface.search.sync(surface.view()))
 +
-+  // Android 硬件返回：设置内搜索/子页先回退，否则退出设置（回到来源会话或首页）。
++  // Android 硬件返回：设置内先退搜索（仅当搜索处于「可返回」状态），再退子页，最后退出设置。
++  //
++  // 为什么不直接判 search.active()：`search.back()` 派发 `back.requested`，而该事件只在
++  // status === "opened" 且 canReturnToSearchOrigin(...) 成立时才生效；用户**正在输入**
++  // （status = browsing）时 active() 也是 true，直接调 back() 会「消费但不生效」，
++  // 返回键被静默吞掉（review C2）。这里按上游自身返回按钮的同款判据分支：
++  //   canReturn() → back()；否则已展开 → escape()（清空搜索）；否则退子页；否则退出设置。
 +  onCleanup(
 +    registerAndroidBackHandler(() => {
-+      if (surface.search.active() || surface.search.expanded()) {
++      if (surface.search.canReturn()) {
 +        surface.search.back()
++        return true
++      }
++      if (surface.search.expanded()) {
++        surface.search.escape()
 +        return true
 +      }
 +      if (surface.view().type !== "root") {

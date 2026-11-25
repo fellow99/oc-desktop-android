@@ -54,7 +54,7 @@ jobs:
       - name: bun 1.4.2（上游 build-node 守卫要求 ^1.4.2）
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.2
+          bun-version: 1.4.5
 
       - name: JDK 17（AGP 8.9）+ Gradle 缓存
         uses: actions/setup-java@v4
@@ -65,16 +65,16 @@ jobs:
 
       - name: 引擎 AAR 预取（Central → OC_NODE_RUNTIME_AAR，verify-runtime 门禁输入）
         run: |
-          curl -fsSL --retry 3 -o "$RUNNER_TEMP/node-runtime-24.22.1.aar" \
-            https://repo1.maven.org/maven2/io/github/fellow99/node-runtime/24.22.1/node-runtime-24.22.1.aar
-          echo "OC_NODE_RUNTIME_AAR=$RUNNER_TEMP/node-runtime-24.22.1.aar" >> "$GITHUB_ENV"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/node-runtime-26.13.0.aar" \
+            https://repo1.maven.org/maven2/io/github/fellow99/node-runtime/26.13.0/node-runtime-26.13.0.aar
+          echo "OC_NODE_RUNTIME_AAR=$RUNNER_TEMP/node-runtime-26.13.0.aar" >> "$GITHUB_ENV"
 
       # ── 载荷五步（scripts/* 零改动；任一步红即整流程失败）────────────────────
       - name: 载荷① apply-patches（基线守卫 + 幂等补丁）
         run: node scripts/apply-patches.mjs --repo "$UPSTREAM"
 
-      - name: 载荷② build-opencode（node24 target，bundle-only）
-        run: OPENCODE_DIR="$UPSTREAM" OPENCODE_NODE_TARGET=node24 node scripts/build-opencode.mjs
+      - name: 载荷② build-opencode（bundle-only；目标与运行时锁一致）
+        run: OPENCODE_DIR="$UPSTREAM" OPENCODE_NODE_TARGET=node26 node scripts/build-opencode.mjs
 
       - name: 载荷③ collect-plugins（三插件物化 + 断言）
         run: node scripts/collect-plugins.mjs
@@ -82,8 +82,8 @@ jobs:
       - name: 载荷④ collect-opencode（tar.gz + 清单 → assets/）
         run: OPENCODE_DIR="$UPSTREAM" node scripts/collect-opencode.mjs
 
-      - name: 载荷⑤ smoke-node24（host 门禁，全绿才打包）
-        run: OPENCODE_DIR="$UPSTREAM" node scripts/smoke-node24.mjs
+      - name: 载荷⑤ smoke-node26（host 门禁，全绿才打包）
+        run: OPENCODE_DIR="$UPSTREAM" node scripts/smoke-node26.mjs
 
       # ── 签名材料注秘（可选；无 secrets → debug 签名兜底）────────────────────
       - name: 签名注秘（有 secrets → VARIANT=release；无 → debug）

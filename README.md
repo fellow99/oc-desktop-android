@@ -14,7 +14,7 @@
 | 版本 | `2.4.1` / `versionCode 20401` |
 | 目标设备 | 平板 / 折叠屏 / 桌面窗口优先（phone 可用，不做专属设计） |
 | 上游基线 | opencode **v2.4.1**（tag `v2.4.1` / 提交 `6f0514052a` / 分支 `Branch_v2.4.1`） |
-| Node 运行时 | `io.github.fellow99:node-bridge:0.2.0` + `io.github.fellow99:node-runtime`（Maven 双包）→ Node 24.x（引擎版本以 aosp-node-runtime 仓 `runtime.lock.json` 为准，当前 24.22.1 / arm64-v8a） |
+| Node 运行时 | `io.github.fellow99:node-bridge:0.2.0` + `io.github.fellow99:node-runtime`（Maven 双包）→ Node **26.13.0**（arm64-v8a；引擎版本以 `runtime.lock.json` 为准，`verify-runtime` 会校验 AAR SHA） |
 | 渲染 | **系统 WebView**（应用进程内；`networkSecurityConfig` 放行 loopback 明文） |
 | 数据 | `node:sqlite`（WAL）→ `<filesDir>/data/opencode/opencode.db` |
 | 规划 | [`docs/000-工程规划.md`](docs/000-工程规划.md)（**唯一权威规划**，v0.3） |
@@ -26,7 +26,7 @@
 ```bash
 # ① 上游产物（host 侧；补丁 → bun → bundle-only → 裁剪 → 插件物化 → tar.gz）
 node scripts/apply-patches.mjs            # 幂等补丁 + 基线守卫（Branch_v2.4.1，基线 6f0514052a）
-OPENCODE_NODE_TARGET=node24 BUN_BIN=<bun-1.4.2> node scripts/build-opencode.mjs   # --bundle-only（上游 build-node 守卫要求 bun ^1.4.2；CI 同口径）
+OPENCODE_NODE_TARGET=node26 BUN_BIN=<bun-1.4.5> node scripts/build-opencode.mjs   # --bundle-only（上游 build-node 守卫要求 bun ^1.4.4；CI 同口径）
 node scripts/collect-plugins.mjs          # 插件物化（git/workspace-roots/search → build/plugins）
 node scripts/collect-opencode.mjs         # verify-runtime 门禁 + 插件入包 → assets/opencode-dist.tar.gz + SHA-256 清单
 node scripts/smoke-node24.mjs             # host 门禁（含品牌 title 断言；全绿才打包）
