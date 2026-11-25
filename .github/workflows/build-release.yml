@@ -63,28 +63,35 @@ jobs:
           java-version: 17
           cache: gradle
 
-      - name: 引擎 AAR 预取（Central → OC_NODE_RUNTIME_AAR，verify-runtime 门禁输入；限流退避重试）
+      - name: 引擎 AAR 预取（Central → OC_NODE_RUNTIME_AAR / OC_NODE_PTY_AAR，verify-runtime 门禁输入；限流退避重试）
         run: |
           # Maven Central 对 hosted runner IP 偶发 429 限流（v2.4.1 首跑即命中，curl --retry 3 扛不住窗口期）：
           # 双 CDN 交替 + 指数退避，最多 10 次；AAR 完整性由后续 verify-runtime 按 runtime.lock.json 校验。
-          OUT="$RUNNER_TEMP/node-runtime-26.13.0.aar"
-          URL1="https://repo1.maven.org/maven2/io/github/fellow99/node-runtime/26.13.0/node-runtime-26.13.0.aar"
-          URL2="https://repo.maven.apache.org/maven2/io/github/fellow99/node-runtime/26.13.0/node-runtime-26.13.0.aar"
-          attempt=1
-          while [ "$attempt" -le 10 ]; do
-            url=$([ $((attempt % 2)) -eq 0 ] && echo "$URL2" || echo "$URL1")
-            if curl -fsSL --retry 2 -o "$OUT" "$url"; then
-              echo "✓ AAR 下载成功（第 $attempt 次，$url 源）"
-              break
-            fi
-            echo "::warning::AAR 下载失败（第 $attempt/10 次）—— 疑似 Maven Central 限流，退避后重试"
-            rm -f "$OUT"
-            sleep $(( attempt * 15 ))
-            attempt=$((attempt + 1))
-          done
-          test -s "$OUT" || { echo "::error::AAR 下载持续失败（Maven Central 限流窗口过长？）—— 请稍后 re-run 本 tag"; exit 1; }
-          sha256sum "$OUT"
-          echo "OC_NODE_RUNTIME_AAR=$OUT" >> "$GITHUB_ENV"
+          # node-pty 与 node-runtime 逐字同版本（runtime.lock.json pty 配对）；载荷④时尚未跑过 Gradle，
+          # pty AAR 不在缓存中，同样预取并以 OC_NODE_PTY_AAR 显式指定。
+          fetch_aar() {
+            out="$1"; base="$2"; attempt=1
+            while [ "$attempt" -le 10 ]; do
+              url=$([ $((attempt % 2)) -eq 0 ] \
+                && echo "https://repo.maven.apache.org/maven2/$base" \
+                || echo "https://repo1.maven.org/maven2/$base")
+              if curl -fsSL --retry 2 -o "$out" "$url"; then
+                echo "✓ $(basename "$out") 下载成功（第 $attempt 次，$url 源）"
+                return 0
+              fi
+              echo "::warning::$(basename "$out") 下载失败（第 $attempt/10 次）—— 疑似 Maven Central 限流，退避后重试"
+              rm -f "$out"
+              sleep $(( attempt * 15 ))
+              attempt=$((attempt + 1))
+            done
+            echo "::error::$(basename "$out") 下载持续失败（Maven Central 限流窗口过长？）—— 请稍后 re-run 本 tag"
+            return 1
+          }
+          fetch_aar "$RUNNER_TEMP/node-runtime-26.13.0.aar" "io/github/fellow99/node-runtime/26.13.0/node-runtime-26.13.0.aar"
+          fetch_aar "$RUNNER_TEMP/node-pty-26.13.0.aar" "io/github/fellow99/node-pty/26.13.0/node-pty-26.13.0.aar"
+          sha256sum "$RUNNER_TEMP"/node-runtime-26.13.0.aar "$RUNNER_TEMP"/node-pty-26.13.0.aar
+          echo "OC_NODE_RUNTIME_AAR=$RUNNER_TEMP/node-runtime-26.13.0.aar" >> "$GITHUB_ENV"
+          echo "OC_NODE_PTY_AAR=$RUNNER_TEMP/node-pty-26.13.0.aar" >> "$GITHUB_ENV"
 
       # ── 载荷五步（scripts/* 零改动；任一步红即整流程失败）────────────────────
       - name: 载荷① apply-patches（基线守卫 + 幂等补丁）

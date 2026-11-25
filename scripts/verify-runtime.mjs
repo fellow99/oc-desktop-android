@@ -9,6 +9,7 @@
  * 校验项（任一不符 ⇒ 退出码 2，构建不得继续）：
  *   ① runtime.lock.json 存在且版本可读；
  *   ② Gradle 缓存（或 --aar / OC_NODE_RUNTIME_AAR 显式指定）中存在 node-runtime-<ver>.aar；
+ *      node-pty AAR 同理支持 OC_NODE_PTY_AAR 显式指定（CI 在 Gradle 缓存为空时预取注入）；
  *   ③ AAR 内 libs/arm64-v8a/libnode.so 的 SHA-256 = lock.libnodeSha256；
  *   ④ AAR 内 libs/arm64-v8a/libc++_shared.so 的 SHA-256 = lock.libcxxSharedSha256；
  *   ⑤ ELF 门禁：ET_DYN · 无 PT_INTERP · EM_AARCH64 · DT_SONAME=libnode.so ·
@@ -282,6 +283,8 @@ console.log(`✓ 运行时锁值校验全过：node-bridge@${lock.bridge} + node
 const ptyVer = lock.pty
 if (ptyVer && lock.libptyNodeSha256) {
   function findPtyAar() {
+    const explicit = process.env.OC_NODE_PTY_AAR
+    if (explicit && existsSync(explicit)) return explicit
     const candidates = []
     const gradleHome = process.env.GRADLE_USER_HOME || path.join(process.env.USERPROFILE || process.env.HOME || '', '.gradle')
     const base = path.join(gradleHome, 'caches', 'modules-2', 'files-2.1', 'io.github.fellow99', 'node-pty', ptyVer)
@@ -295,7 +298,7 @@ if (ptyVer && lock.libptyNodeSha256) {
   }
   const ptyAar = findPtyAar()
   if (!ptyAar) {
-    problems.push(`未找到 node-pty-${ptyVer}.aar（先 ./gradlew :app:assembleDebug）`)
+    problems.push(`未找到 node-pty-${ptyVer}.aar（先 ./gradlew :app:assembleDebug，或 OC_NODE_PTY_AAR 显式指定）`)
   } else {
     console.log(`✓ PTY AAR：${ptyAar}`)
     const ptyZip = readZip(ptyAar)
